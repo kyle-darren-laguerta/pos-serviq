@@ -66,7 +66,11 @@ const POSScreen = () => {
           <button className="nav-btn" onClick={() => navigate('/inventory')}>Inventory</button>
           
           <button className="nav-btn" onClick={() => navigate('/admin')}>Shift Management</button>
-          <button className="nav-btn" onClick={() => navigate('/reservations')}>Customer Lookup</button>
+          <button className="nav-btn" onClick={() => navigate('/reservations')}>Reservations</button>
+
+             <button onClick={() => navigate('/backoffice')}>
+          Manage Menu
+        </button>
 
       <div className="pos-main">
         <section className="menu-section">
@@ -88,6 +92,8 @@ const POSScreen = () => {
               ))}
             </div>
           </div>
+
+      
 
           <div className="item-grid">
             {filteredMenu.map((item) => (
