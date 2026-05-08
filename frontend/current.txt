@@ -1,0 +1,19 @@
+src/
+└── pages/
+    └── POSScreen/
+        ├── POSScreen.jsx (Main container holding the layout)
+        ├── components/
+        │   ├── Navbar.jsx (Handles Shift Management & Customer Lookup routing)
+        │   ├── OrderPanel/
+        │   │   ├── OrderPanel.jsx (Active shopping cart container)
+        │   │   ├── TicketHeader.jsx (Displays order_id and table_number input)
+        │   │   ├── CartList.jsx (Maps through line_item_id and quantity)
+        │   │   └── CheckoutButton.jsx (Triggers receipt_id generation)
+        │   └── MenuGrid/
+        │       ├── MenuGrid.jsx (Central area for food selection)
+        │       ├── ItemCard.jsx (Clickable buttons for menu_item_id)
+        │       ├── AddOnModal.jsx (Popup for addon_id selection)
+        │       └── FoodPackagesTab.jsx (Filters for package_id)
+
+
+        // Will Change

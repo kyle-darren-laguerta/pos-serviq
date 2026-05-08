@@ -1,0 +1,136 @@
+/* Kitchen Display Container (Dark Theme) */
+.kds-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #0f172a; /* Dark slate background */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: white;
+}
+
+/* Header */
+.kds-header {
+  background-color: #1e293b;
+  padding: 15px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #334155;
+}
+
+.kds-logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #ea580c; /* ServiQ Orange */
+}
+
+/* Grid Layout */
+.ticket-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+/* Base Ticket Card */
+.ticket-card {
+  background-color: #1e293b;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+  transition: transform 0.2s;
+}
+
+.ticket-header-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.ticket-header-info h2 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.table-badge {
+  background-color: #334155;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-weight: bold;
+}
+
+/* The Prep List */
+.prep-list {
+  list-style-type: none;
+  padding: 0;
+  flex: 1; /* Pushes button to bottom */
+  margin: 15px 0;
+}
+
+.prep-list li {
+  font-size: 1.2rem;
+  padding: 8px 0;
+  border-bottom: 1px solid #334155;
+}
+
+.item-qty {
+  font-weight: bold;
+  color: #facc15;
+  margin-right: 10px;
+}
+
+/* Bump Button */
+.bump-btn {
+  width: 100%;
+  padding: 15px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: white;
+  margin-top: 10px;
+  transition: opacity 0.2s;
+}
+
+.bump-btn:hover {
+  opacity: 0.8;
+}
+
+/* =========================================
+   GROUPMATE'S STATUS COLORS IMPLEMENTATION
+   ========================================= */
+
+/* YELLOW = PENDING */
+.status-pending {
+  border-top: 6px solid #eab308;
+}
+.status-pending .ticket-status-bar { color: #eab308; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;}
+.status-pending .bump-btn { background-color: #eab308; color: #1e293b; }
+
+/* BLUE = PREPARING */
+.status-preparing {
+  border-top: 6px solid #3b82f6;
+}
+.status-preparing .ticket-status-bar { color: #3b82f6; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;}
+.status-preparing .bump-btn { background-color: #3b82f6; }
+
+/* GREEN = READY */
+.status-ready {
+  border-top: 6px solid #22c55e;
+}
+.status-ready .ticket-status-bar { color: #22c55e; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;}
+.status-ready .bump-btn { background-color: #22c55e; }
+
+/* Empty State */
+.no-orders {
+  grid-column: 1 / -1;
+  text-align: center;
+  font-size: 2rem;
+  color: #64748b;
+  margin-top: 50px;
+}

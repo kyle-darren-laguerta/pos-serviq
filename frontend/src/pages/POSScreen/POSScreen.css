@@ -1,0 +1,313 @@
+/* ServiQ / Tapsi Port Brand Colors:
+  Primary: #ea580c (Deep Orange - Appetite stimulating)
+  Accent: #facc15 (Warm Yellow)
+  Dark Text/Nav: #1e293b (Slate 800)
+  Background: #f8fafc (Slate 50)
+*/
+
+.pos-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* NAVBAR */
+.pos-navbar {
+  background-color: #1e293b;
+  color: white;
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+.nav-logo {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #facc15; 
+  letter-spacing: 0.5px;
+}
+
+.nav-btn {
+  margin-left: 10px;
+  padding: 8px 16px;
+  background-color: transparent;
+  color: #cbd5e1;
+  border: 1px solid #475569;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.nav-btn:hover {
+  background-color: #334155;
+  color: white;
+  border-color: #cbd5e1;
+}
+
+/* MAIN LAYOUT */
+.pos-main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  background-color: #f8fafc;
+}
+
+/* LEFT SIDE: MENU GRID */
+.menu-section {
+  flex: 7;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.menu-controls {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  gap: 15px;
+}
+
+.search-bar {
+  padding: 12px 16px;
+  width: 40%;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search-bar:focus {
+  outline: none;
+  border-color: #ea580c;
+  box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.2);
+}
+
+.category-filters {
+  display: flex;
+  gap: 10px;
+}
+
+.filter-btn {
+  padding: 10px 20px;
+  background-color: white;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.filter-btn:hover {
+  background-color: #f1f5f9;
+}
+
+.filter-btn.active {
+  background-color: #ea580c;
+  color: white;
+  border-color: #ea580c;
+  box-shadow: 0 4px 6px -1px rgba(234, 88, 12, 0.3);
+}
+
+.item-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 20px;
+  overflow-y: auto;
+  padding-right: 10px; 
+}
+
+.item-card {
+  background-color: white;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 120px;
+}
+
+/* This creates the "lift" effect when hovering over food */
+.item-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  border-color: #facc15;
+}
+
+.item-card h4 {
+  margin: 0 0 8px 0;
+  color: #1e293b;
+  font-size: 1.1rem;
+}
+
+.item-card p {
+  margin: 0;
+  color: #ea580c;
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+/* RIGHT SIDE: CART PANEL */
+.order-section {
+  flex: 3;
+  background-color: white;
+  border-left: 1px solid #e2e8f0;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -4px 0 15px -3px rgba(0, 0, 0, 0.05);
+  z-index: 5;
+}
+
+.ticket-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px dashed #cbd5e1;
+}
+
+.ticket-header h3 {
+  margin: 0;
+  color: #1e293b;
+}
+
+.order-id {
+  background-color: #f1f5f9;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.cart-list {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.empty-cart {
+  text-align: center;
+  color: #94a3b8;
+  font-style: italic;
+  margin-top: 50px;
+}
+
+.cart-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f1f5f9;
+  animation: slideIn 0.3s ease; /* Pop-in animation */
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.cart-item-info {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.qty {
+  background-color: #ea580c;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.name {
+  font-weight: 600;
+  color: #334155;
+}
+
+.cart-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.price {
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.remove-btn {
+  background: #fee2e2;
+  color: #ef4444;
+  border: none;
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.remove-btn:hover {
+  background: #fca5a5;
+}
+
+.checkout-panel {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 2px dashed #cbd5e1;
+}
+
+.total-display {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin-bottom: 20px;
+}
+
+.checkout-btn {
+  width: 100%;
+  padding: 16px;
+  background-color: #ea580c;
+  color: white;
+  font-size: 1.2rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px -1px rgba(234, 88, 12, 0.3);
+}
+
+.checkout-btn:hover:not(:disabled) {
+  background-color: #c2410c;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 8px -1px rgba(234, 88, 12, 0.4);
+}
+
+.checkout-btn:disabled {
+  background-color: #cbd5e1;
+  color: #94a3b8;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
