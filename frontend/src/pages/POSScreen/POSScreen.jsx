@@ -61,16 +61,15 @@ const POSScreen = () => {
 
   return (
     <div className="pos-container">
-     {/* We added the KDS and Inventory routes here! */}
-          <button className="nav-btn" onClick={() => navigate('/kds')}>Kitchen</button>
-          <button className="nav-btn" onClick={() => navigate('/inventory')}>Inventory</button>
-          
-          <button className="nav-btn" onClick={() => navigate('/admin')}>Shift Management</button>
-          <button className="nav-btn" onClick={() => navigate('/reservations')}>Reservations</button>
-
-             <button onClick={() => navigate('/backoffice')}>
-          Manage Menu
-        </button>
+      {/* --- VERTICAL NAVIGATION COLUMN --- */}
+      <button className="nav-btn" onClick={() => navigate('/kds')}>Kitchen</button>
+      <button className="nav-btn" onClick={() => navigate('/inventory')}>Inventory</button>
+      <button className="nav-btn" onClick={() => navigate('/admin')}>Shift Management</button>
+      <button className="nav-btn" onClick={() => navigate('/reservations')}>Reservations</button>
+      <button className="nav-btn" onClick={() => navigate('/backoffice')}>Manage Menu</button>
+      {/* ---> NEW ATTENDANCE BUTTON <--- */}
+      <button className="nav-btn" onClick={() => navigate('/attendance')}>Attendance</button>
+      {/* ---------------------------------- */}
 
       <div className="pos-main">
         <section className="menu-section">
@@ -92,8 +91,6 @@ const POSScreen = () => {
               ))}
             </div>
           </div>
-
-      
 
           <div className="item-grid">
             {filteredMenu.map((item) => (
