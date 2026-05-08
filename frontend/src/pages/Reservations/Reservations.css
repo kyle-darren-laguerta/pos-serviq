@@ -1,36 +1,35 @@
-/* --- src/pages/Reservations/Reservations.css --- */
+/* --- Reservations Polished CSS --- */
 .res-container {
-  padding: 20px;
-  max-width: 1200px;
+  padding: 30px;
+  max-width: 1300px;
   margin: 0 auto;
   color: #f8fafc;
-  display: flex; /* Force a flex container */
-  flex-direction: column; /* This keeps the header ABOVE the grid */
-  min-height: 100vh;
+  display: flex;
+  flex-direction: column; /* This keeps the header ON TOP */
+  gap: 20px;
 }
 
 .res-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
   border-bottom: 2px solid #334155;
-  padding-bottom: 10px;
-  width: 100%; /* Take up the full width */
+  padding-bottom: 15px;
+  width: 100%;
 }
 
-/* Ensure the title is visible even if the global background is light */
 .res-header h1 { 
-  color: #1e293b; /* Dark color for the title to be readable */
   margin: 0; 
-  font-size: 28px;
+  font-size: 26px;
+  color: #f1f5f9;
 }
 
 .res-grid {
   display: flex;
   gap: 30px;
-  align-items: flex-start;
   width: 100%;
+  align-items: flex-start;
+  flex-wrap: wrap; /* Prevents squishing on smaller screens */
 }
 
 .res-form-panel, .res-list-panel {
@@ -38,10 +37,47 @@
   padding: 25px;
   border-radius: 12px;
   border: 1px solid #334155;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
 }
 
-.res-form-panel { flex: 1; min-width: 380px; }
+.res-form-panel { flex: 1; min-width: 400px; }
 .res-list-panel { flex: 1.5; min-width: 450px; }
 
-/* ... keep the rest of your form and card styling from before ... */
+/* Form Elements */
+.res-form-panel form { display: flex; flex-direction: column; gap: 15px; }
+.res-form-panel label { font-weight: bold; color: #94a3b8; font-size: 13px; text-transform: uppercase; }
+.res-form-panel input, .res-form-panel select {
+  width: 100%;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #475569;
+  background-color: #0f172a;
+  color: white;
+}
+
+.row-split { display: flex; gap: 15px; }
+.row-split > div { flex: 1; }
+
+.confirm-btn {
+  background-color: #2563eb;
+  color: white;
+  padding: 15px;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 10px;
+}
+.confirm-btn:hover { background-color: #1d4ed8; }
+
+/* Booking Cards */
+.booking-item {
+  background-color: #0f172a;
+  border: 1px solid #334155;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
