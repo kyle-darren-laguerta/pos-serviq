@@ -1,145 +1,113 @@
+/* --- src/pages/Inventory/Inventory.css --- */
 .inventory-container {
-  display: flex;
-  height: 100vh;
-  background-color: #f8fafc;
-  font-family: 'Segoe UI', sans-serif;
-}
-
-/* Sidebar (Matches Admin) */
-.inv-sidebar {
-  width: 260px;
-  background-color: #1e293b;
-  color: white;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 4px 0 10px rgba(0,0,0,0.1);
-  z-index: 5;
-}
-
-.inv-logo {
-  padding: 24px;
-  font-size: 1.4rem;
-  font-weight: 800;
-  color: #facc15; /* Yellow to distinguish from Admin */
-  border-bottom: 1px solid #334155;
-  margin-bottom: 20px;
-}
-
-.inv-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 0 16px;
-  flex: 1;
-}
-
-.inv-nav-btn {
-  padding: 12px 16px;
-  background: transparent;
-  color: #cbd5e1;
-  border: none;
-  border-radius: 6px;
-  text-align: left;
-  font-size: 1.05rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.inv-nav-btn:hover { background-color: #334155; color: white; }
-.inv-nav-btn.active { background-color: #facc15; color: #1e293b; font-weight: bold; }
-
-.back-btn {
-  margin: 20px;
-  padding: 14px;
-  background-color: #334155;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: bold;
-}
-.back-btn:hover { background-color: #475569; }
-
-/* Main Area */
-.inv-main {
-  flex: 1;
-  padding: 30px;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  color: #f8fafc; /* Light text for dark theme */
 }
 
 .inv-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 25px;
+  margin-bottom: 30px;
+  border-bottom: 2px solid #334155;
+  padding-bottom: 10px;
 }
 
 .inv-header h1 {
+  color: #f1f5f9;
+  font-size: 24px;
   margin: 0;
-  color: #0f172a;
-  font-size: 2rem;
 }
 
-.action-btn {
-  padding: 12px 24px;
-  border: none;
-  border-radius: 8px;
-  font-weight: bold;
-  font-size: 1rem;
-  cursor: pointer;
+.back-btn {
+  padding: 10px 20px;
+  background-color: #334155;
   color: white;
-}
-.restock-btn { background-color: #3b82f6; } /* Blue */
-.log-waste-btn { background-color: #ef4444; } /* Red */
-
-/* Table Styling */
-.table-card {
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e2e8f0;
-  overflow: hidden;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
 }
 
-.inv-table {
+.back-btn:hover { background-color: #475569; }
+
+.inv-grid {
+  display: flex;
+  gap: 30px;
+  align-items: flex-start;
+}
+
+.add-item-panel, .current-stock-panel {
+  background-color: #1e293b; /* Dark card background */
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #334155;
+}
+
+.add-item-panel {
+  flex: 1;
+  min-width: 300px;
+}
+
+.current-stock-panel {
+  flex: 2;
+  min-width: 400px;
+}
+
+/* Form styling */
+.add-item-panel form { display: flex; flex-direction: column; gap: 15px; }
+.add-item-panel label { font-weight: bold; color: #cbd5e1; font-size: 14px; margin-bottom: 5px; display: block;}
+.add-item-panel input, .add-item-panel select {
   width: 100%;
-  border-collapse: collapse;
-  text-align: left;
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid #475569;
+  background-color: #0f172a;
+  color: white;
+  box-sizing: border-box;
 }
 
-.inv-table th {
-  background-color: #f1f5f9;
-  color: #475569;
-  padding: 16px;
-  border-bottom: 2px solid #e2e8f0;
+.save-btn {
+  padding: 12px;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-top: 10px;
 }
 
-.inv-table td {
-  padding: 16px;
-  border-bottom: 1px solid #e2e8f0;
-  color: #1e293b;
+.save-btn:hover { background-color: #1d4ed8; }
+
+/* Stock List Styling */
+.stock-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 15px;
+  background-color: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  align-items: center;
 }
 
-/* Low Stock Alert Styling */
-.low-stock-row {
-  background-color: #fef2f2; /* Very light red */
+.stock-name { font-weight: 500; font-size: 16px; }
+.stock-status { display: flex; gap: 15px; align-items: center; }
+.stock-qty { font-weight: bold; }
+.stock-qty.low { color: #ef4444; } 
+.stock-qty.good { color: #10b981; } 
+
+.edit-btn {
+  padding: 6px 12px;
+  background-color: #475569;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
 }
 
-.code-badge { background-color: #e2e8f0; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: bold; }
-.item-name { font-weight: 600; font-size: 1.1rem; }
-
-.stock-qty { font-weight: bold; font-size: 1.1rem; }
-.min-label { display: block; font-size: 0.8rem; color: #64748b; font-weight: normal; }
-.waste-qty { color: #ef4444; font-weight: bold; }
-.reason-text { color: #64748b; font-style: italic; }
-
-.status-pill { padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; }
-.status-pill.safe { background-color: #dcfce7; color: #166534; }
-.status-pill.danger { background-color: #fee2e2; color: #991b1b; border: 1px solid #f87171; }
-
-.text-btn { background: none; border: none; color: #3b82f6; font-weight: bold; cursor: pointer; }
-.text-btn:hover { text-decoration: underline; }
-
-.placeholder-box { text-align: center; padding: 60px; background: white; border-radius: 10px; color: #64748b; }
+.edit-btn:hover { background-color: #64748b; }
