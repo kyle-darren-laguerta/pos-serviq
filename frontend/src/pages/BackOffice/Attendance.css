@@ -1,0 +1,77 @@
+/* --- Attendance.css --- */
+.attendance-container {
+  padding: 40px;
+  max-width: 1000px;
+  margin: 0 auto;
+  color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.attendance-card {
+  background-color: #1e293b;
+  padding: 40px;
+  border-radius: 16px;
+  border: 1px solid #334155;
+  text-align: center;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+}
+
+.live-clock {
+  font-size: 56px;
+  font-weight: 800;
+  color: #3b82f6;
+  font-family: 'Courier New', Courier, monospace;
+  margin: 20px 0;
+  letter-spacing: 2px;
+}
+
+.btn-group {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.punch-btn {
+  padding: 20px 50px;
+  font-size: 20px;
+  font-weight: bold;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+}
+
+.punch-btn.in { background-color: #10b981; color: white; }
+.punch-btn.out { background-color: #ef4444; color: white; }
+.punch-btn:hover { opacity: 0.9; transform: translateY(-2px); }
+.punch-btn:active { transform: translateY(0); }
+
+.log-section {
+  background-color: #1e293b;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #334155;
+}
+
+.log-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.log-table th {
+  text-align: left;
+  color: #94a3b8;
+  padding: 12px;
+  border-bottom: 2px solid #334155;
+}
+
+.log-table td {
+  padding: 12px;
+  border-bottom: 1px solid #334155;
+  color: #e2e8f0;
+}
