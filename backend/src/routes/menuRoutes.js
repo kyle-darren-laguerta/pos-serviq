@@ -40,6 +40,17 @@ route.post('/addon', addAddon);
 route.patch('/addon/:id', updateAddon);
 
 /**
+ * Description: Update addon item (PUT)
+ * Status: Working
+ * Request Body Structure (Optional):
+    {
+        name: "Extra Rice"
+        price: 25
+    }
+ */
+route.put('/addon/:id', updateAddon);
+
+/**
  * Description: Add food package
  * Status: Not tested
  * {

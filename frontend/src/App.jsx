@@ -9,7 +9,7 @@ import { InventoryProvider } from './context/InventoryContext';
 import POSScreen from "./pages/POSScreen/POSScreen"; 
 import KitchenDisplay from "./pages/KDS/KitchenDisplay"; 
 import BackOffice from "./pages/BackOffice/BackOffice";
-import MenuManager from './pages/BackOffice/MenuManager';
+import ManageMenu from './pages/Menu/ManageMenu';
 import Attendance from './pages/BackOffice/Attendance';
 import Inventory from "./pages/Inventory/Inventory";     
 import Reservations from "./pages/Reservations/Reservations";
@@ -25,7 +25,8 @@ function App() {
             <Route path="/kds" element={<KitchenDisplay />} />
             <Route path="/admin" element={<BackOffice />} />
             <Route path="/inventory" element={<Inventory />} />
-            <Route path="/backoffice" element={<MenuManager />} />
+            <Route path="/manage-menu" element={<ManageMenu />} />
+            <Route path="/backoffice" element={<BackOffice />} />
             <Route path="/reservations" element={<Reservations />} />
             <Route path="/attendance" element={<Attendance />} />
           </Routes>

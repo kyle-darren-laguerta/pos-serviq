@@ -43,6 +43,12 @@ export default function BackOffice() {
           >
             📍 Delivery Zones
           </button>
+          <button 
+            className="sidebar-btn"
+            onClick={() => navigate('/manage-menu')}
+          >
+            🍽️ Manage Menu
+          </button>
         </nav>
 
         {/* Escape Hatch back to Screen 1 */}

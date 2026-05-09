@@ -65,8 +65,8 @@ const POSScreen = () => {
       <button className="nav-btn" onClick={() => navigate('/kds')}>Kitchen</button>
       <button className="nav-btn" onClick={() => navigate('/inventory')}>Inventory</button>
       <button className="nav-btn" onClick={() => navigate('/admin')}>Shift Management</button>
-      <button className="nav-btn" onClick={() => navigate('/reservations')}>Reservations</button>
-      <button className="nav-btn" onClick={() => navigate('/backoffice')}>Manage Menu</button>
+      <button className="nav-btn" onClick={() => navigate('/backoffice')}>Reservations</button>
+      <button className="nav-btn" onClick={() => navigate('/manage-menu')}>Manage Menu</button>
       {/* ---> NEW ATTENDANCE BUTTON <--- */}
       <button className="nav-btn" onClick={() => navigate('/attendance')}>Attendance</button>
       {/* ---------------------------------- */}

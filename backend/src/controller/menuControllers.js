@@ -2,7 +2,7 @@ import db from '../config/db.js';
 
 export const getMenu = async (req, res) => {
     let sql = `
-        SELECT name, price, availability_status
+        SELECT menu_item_id, name, price, availability_status
         FROM menu_item;
     `;
     const params = [];
@@ -34,7 +34,6 @@ export const addMenu = async (req, res) => {
             return res.status(404).json({ message: "There is menu_item" });
         }
 
-        res.send("Menu data inserted sucessfully");
         res.json({
             sucess: true,
             data: rows
@@ -47,7 +46,7 @@ export const addMenu = async (req, res) => {
 
 export const updateMenuItem = async (req, res) => {
     const itemId = req.params.id;
-    const { name, price } = req.body;
+    const { name, price, availability_status } = req.body;
 
     // 1. Ensure at least one field is provided
     if (!name && price === undefined) {
@@ -70,6 +69,11 @@ export const updateMenuItem = async (req, res) => {
         }
         updates.push("price = ?");
         params.push(price);
+    }
+
+    if (availability_status !== undefined) {
+        updates.push("availability_status = ?");
+        params.push(availability_status);
     }
 
     // Add the ID to the params array for the WHERE clause
@@ -102,7 +106,7 @@ export const updateMenuItem = async (req, res) => {
 
 export const getAddon = async (req, res) => {
     let sql = `
-        SELECT name, price
+        SELECT addon_id, name, price
         FROM addon;
     `;
     const params = [];
@@ -127,11 +131,21 @@ export const getAddon = async (req, res) => {
 export const addAddon = async (req, res) => {
     const { name, price } = req.body;
 
-    try {
-        const [results] = await db.query("INSERT INTO addon (name, price) VALUES (?, ?)", [name, price]);
+    if (!name || price === undefined) {
+        return res.status(400).json({ success: false, message: 'Missing required fields: name, price' });
+    }
 
-        res.status(200).json({
+    if (typeof price !== 'number' || price < 0) {
+        return res.status(400).json({ success: false, message: 'Invalid price value' });
+    }
+
+    try {
+        const [result] = await db.query("INSERT INTO addon (name, price) VALUES (?, ?)", [name, price]);
+
+        res.status(201).json({
+            success: true,
             message: 'Addon added successfully',
+            data: { id: result.insertId }
         });
     } catch (error) {
         console.error(error);
