@@ -1,11 +1,30 @@
 {
-  "name": "pos-backend",
+  "name": "tapsi-backend",
   "version": "1.0.0",
-  "main": "server.js",
+  "description": "",
+  "main": "index.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "nodemon src/app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kyle-darren-laguerta/tapsi-backend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/kyle-darren-laguerta/tapsi-backend/issues"
+  },
+  "homepage": "https://github.com/kyle-darren-laguerta/tapsi-backend#readme",
   "dependencies": {
-    "express": "^4.18.2"
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "mysql2": "^3.22.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
   }
 }
