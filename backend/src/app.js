@@ -6,6 +6,7 @@ import financeRouter from './routes/financeRoutes.js';
 import orderRouter from './routes/orderRoutes.js';
 import menuRouter from './routes/menuRoutes.js';
 import inventoryRouter from './routes/inventoryRoutes.js';
+import foodPackageRouter from './routes/foodPackageRoutes.js';
 
 const app = express();
 const port = 3000;
@@ -18,6 +19,7 @@ app.use('/finance', financeRouter);
 app.use('/order', orderRouter);
 app.use('/menu', menuRouter);
 app.use('/inventory', inventoryRouter);
+app.use('/food-package', foodPackageRouter);
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);

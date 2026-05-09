@@ -231,26 +231,42 @@ export const addPackage = async (req, res) => {
     await connection.beginTransaction();
 
     try {
-        const [packageResult] = await connection.query(`INSERT INTO food_package (package_name, total_price) VALUES (?, 0)`, [packageName]);
+        // Calculate total price from menu item prices and quantities
+        let totalPrice = 0;
+        for (const item of items) {
+            const [[menuItem]] = await connection.query(
+                `SELECT price FROM menu_item WHERE menu_item_id = ?`,
+                [item.id]
+            );
+
+            if (!menuItem) throw new Error(`Menu item with id ${item.id} not found`);
+
+            totalPrice += menuItem.price * item.quantity;
+        }
+
+        // Insert package with the calculated total price
+        const [packageResult] = await connection.query(
+            `INSERT INTO food_package (package_name, total_price) VALUES (?, ?)`,
+            [packageName, totalPrice]
+        );
 
         const generatedPackageId = packageResult.insertId;
 
+        // Insert each menu item into the junction table
         for (const item of items) {
-            const [itemResult] = await connection.query(
-                'INSERT INTO package_menu_item (menu_item_id, package_id, quantity)',
+            await connection.query(
+                `INSERT INTO package_menu_item (menu_item_id, package_id, quantity) VALUES (?, ?, ?)`,
                 [item.id, generatedPackageId, item.quantity]
             );
         }
 
         await connection.commit();
-        res.status(201).json({ success: true, message: "Order placed successfully" });
+        res.status(201).json({ success: true, message: "Package created successfully", totalPrice });
     } catch (error) {
-        // Undo everything if any part of the order fails
         await connection.rollback();
         console.error("Transaction Error:", error);
-        res.status(500).json({ success: false, error: "Database error occurred" });
+        res.status(500).json({ success: false, error: error.message || "Database error occurred" });
     } finally {
-        // Always release the connection back to the pool
         connection.release();
     }
 };
