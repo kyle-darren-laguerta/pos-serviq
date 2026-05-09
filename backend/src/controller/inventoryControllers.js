@@ -1,10 +1,34 @@
 import db from '../config/db.js';
 
-export const addIngredient = async (req, res) => {
-    const { name, unitOfMeasurement, minStock, costPerUnit, currentStock} = req.body;
+export const getIngredients = async (req, res) => {
+    let sql = `
+        SELECT ingredient_id, ingredient_name, unit_of_measure, minimum_stock_level, cost_per_unit, current_stock
+        FROM ingredient;
+    `;
+    const params = [];
 
     try {
-        const [result] = await db.query("INSERT INTO ingredient (ingredient_name, unit_of_measure, minimum_stock_level, cost_per_unit, current_stock) VALUES (?, ?, ?, ?, ?)", [name, unitOfMeasurement, minStock, costPerUnit, currentStock]);
+        const [rows] = await db.query(sql, params);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ message: "There is ingredient" });
+        }
+
+        res.json({
+            sucess: true,
+            data: rows
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "Database error" });
+    }
+}
+
+export const addIngredient = async (req, res) => {
+    const { ingredient_name, unit_of_measure, minimum_stock_level, cost_per_unit, current_stock} = req.body;
+
+    try {
+        const [result] = await db.query("INSERT INTO ingredient (ingredient_name, unit_of_measure, minimum_stock_level, cost_per_unit, current_stock) VALUES (?, ?, ?, ?, ?)", [ingredient_name, unit_of_measure, minimum_stock_level, cost_per_unit, current_stock]);
 
         res.status(201).json({
             success: true,
@@ -96,47 +120,47 @@ export const addSupplier = async (req, res) => {
 
 export const updateIngredient = async (req, res) => {
     const ingredientId = req.params.id;
-    const { name, unitOfMeasurement, minStock, costPerUnit, currentStock } = req.body;
+    const { ingredient_name, unit_of_measure, minimum_stock_level, cost_per_unit, current_stock } = req.body;
 
-    if (name === undefined && unitOfMeasurement === undefined && minStock === undefined && costPerUnit === undefined && currentStock === undefined) {
+    if (ingredient_name === undefined && unit_of_measure === undefined && minimum_stock_level === undefined && cost_per_unit === undefined && current_stock === undefined) {
         return res.status(400).json({ error: 'No fields provided for update' });
     }
 
     const updates = [];
     const params = [];
 
-    if (name !== undefined) {
+    if (ingredient_name !== undefined) {
         updates.push("ingredient_name = ?");
-        params.push(name);
+        params.push(ingredient_name);
     }
 
-    if (unitOfMeasurement !== undefined) {
+    if (unit_of_measure !== undefined) {
         updates.push("unit_of_measure = ?");
-        params.push(unitOfMeasurement);
+        params.push(unit_of_measure);
     }
 
-    if (minStock !== undefined) {
-        if (typeof minStock !== 'number' || minStock < 0) {
+    if (minimum_stock_level !== undefined) {
+        if (typeof minimum_stock_level !== 'number' || minimum_stock_level < 0) {
             return res.status(400).json({ error: 'Invalid minimum stock value' });
         }
         updates.push("minimum_stock_level = ?");
-        params.push(minStock);
+        params.push(minimum_stock_level);
     }
 
-    if (costPerUnit !== undefined) {
-        if (typeof costPerUnit !== 'number' || costPerUnit < 0) {
+    if (cost_per_unit !== undefined) {
+        if (typeof cost_per_unit !== 'number' || cost_per_unit < 0) {
             return res.status(400).json({ error: 'Invalid cost per unit value' });
         }
         updates.push("cost_per_unit = ?");
-        params.push(costPerUnit);
+        params.push(cost_per_unit);
     }
 
-    if (currentStock !== undefined) {
-        if (typeof currentStock !== 'number' || currentStock < 0) {
+    if (current_stock !== undefined) {
+        if (typeof current_stock !== 'number' || current_stock < 0) {
             return res.status(400).json({ error: 'Invalid current stock value' });
         }
         updates.push("current_stock = ?");
-        params.push(currentStock);
+        params.push(current_stock);
     }
 
     params.push(ingredientId);

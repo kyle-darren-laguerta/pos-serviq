@@ -1,9 +1,11 @@
 import express from 'express';
-import { addIngredient, addWasteItem, addSupplier, updateIngredient } from '../controller/inventoryControllers.js';
+import { addIngredient, addWasteItem, addSupplier, updateIngredient, getIngredients } from '../controller/inventoryControllers.js';
 
 const route = express.Router();
 
+
 // Select stock report
+route.get("/ingredient", getIngredients);
 
 /**
  * Description: Add ingredient

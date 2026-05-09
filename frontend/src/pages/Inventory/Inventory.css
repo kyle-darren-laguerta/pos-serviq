@@ -69,6 +69,13 @@
   box-sizing: border-box;
 }
 
+.form-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 10px;
+}
+
 .save-btn {
   padding: 12px;
   background-color: #2563eb;
@@ -77,10 +84,19 @@
   border-radius: 4px;
   cursor: pointer;
   font-weight: bold;
-  margin-top: 10px;
+}
+
+.cancel-btn {
+  padding: 12px;
+  background-color: #475569;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
 }
 
 .save-btn:hover { background-color: #1d4ed8; }
+.cancel-btn:hover { background-color: #64748b; }
 
 /* Stock List Styling */
 .stock-item {
@@ -94,11 +110,43 @@
   align-items: center;
 }
 
-.stock-name { font-weight: 500; font-size: 16px; }
-.stock-status { display: flex; gap: 15px; align-items: center; }
-.stock-qty { font-weight: bold; }
-.stock-qty.low { color: #ef4444; } 
-.stock-qty.good { color: #10b981; } 
+.stock-name { font-weight: 600; font-size: 16px; }
+
+.stock-unit {
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.stock-info-grid {
+  display: flex;
+  gap: 20px;
+  font-size: 13px;
+}
+
+.info-label {
+  color: #cbd5e1;
+}
+
+.info-label .low {
+  color: #ef4444;
+  font-weight: bold;
+}
+
+.info-label .good {
+  color: #10b981;
+  font-weight: bold;
+}
+
+.stock-header {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+
+.stock-details {
+  flex: 1;
+}
 
 .edit-btn {
   padding: 6px 12px;
@@ -108,6 +156,7 @@
   border-radius: 4px;
   cursor: pointer;
   font-size: 12px;
+  margin-left: 15px;
 }
 
 .edit-btn:hover { background-color: #64748b; }

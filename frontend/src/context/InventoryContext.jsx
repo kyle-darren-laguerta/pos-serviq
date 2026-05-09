@@ -7,19 +7,19 @@ export const InventoryContext = createContext();
 export const InventoryProvider = ({ children }) => {
   // 1. The Master Stock List (Back-of-House)
   const [inventory, setInventory] = useState([
-    { id: 'INV-001', item: 'Beef Tapa (Portion)', stock: 50 },
-    { id: 'INV-002', item: 'Pork Chop (Portion)', stock: 40 },
-    { id: 'INV-003', item: 'Egg (Pcs)', stock: 100 },
-    { id: 'INV-004', item: 'Garlic Rice (Cup)', stock: 80 },
-    { id: 'INV-005', item: 'Iced Tea (Cup)', stock: 60 },
-    { id: 'INV-006', item: 'Coke Mismo (Bottle)', stock: 48 },
+    { id: 'INV-001', name: 'Beef Tapa (Portion)', unitOfMeasurement: 'pcs', minStock: 20, costPerUnit: 5.50, currentStock: 50 },
+    { id: 'INV-002', name: 'Pork Chop (Portion)', unitOfMeasurement: 'pcs', minStock: 15, costPerUnit: 4.50, currentStock: 40 },
+    { id: 'INV-003', name: 'Egg', unitOfMeasurement: 'pcs', minStock: 50, costPerUnit: 0.15, currentStock: 100 },
+    { id: 'INV-004', name: 'Garlic Rice', unitOfMeasurement: 'cup', minStock: 30, costPerUnit: 2.00, currentStock: 80 },
+    { id: 'INV-005', name: 'Iced Tea', unitOfMeasurement: 'cup', minStock: 25, costPerUnit: 1.50, currentStock: 60 },
+    { id: 'INV-006', name: 'Coke Mismo', unitOfMeasurement: 'bottle', minStock: 20, costPerUnit: 3.00, currentStock: 48 },
   ]);
 
   // Helper function to find an ingredient and subtract from it
   const deductIngredient = (currentStock, ingredientName, amountToDeduct) => {
     return currentStock.map(stockItem => 
-      stockItem.item === ingredientName 
-        ? { ...stockItem, stock: Math.max(0, stockItem.stock - amountToDeduct) } // Prevents negative stock
+      stockItem.name === ingredientName 
+        ? { ...stockItem, currentStock: Math.max(0, stockItem.currentStock - amountToDeduct) } // Prevents negative stock
         : stockItem
     );
   };
@@ -36,19 +36,19 @@ export const InventoryProvider = ({ children }) => {
         // RECIPE MAPPING: Break meals down into ingredients!
         if (cartItem.item_name === 'Tapsilog') {
           updatedStock = deductIngredient(updatedStock, 'Beef Tapa (Portion)', 1 * qty);
-          updatedStock = deductIngredient(updatedStock, 'Egg (Pcs)', 1 * qty);
-          updatedStock = deductIngredient(updatedStock, 'Garlic Rice (Cup)', 1 * qty);
+          updatedStock = deductIngredient(updatedStock, 'Egg', 1 * qty);
+          updatedStock = deductIngredient(updatedStock, 'Garlic Rice', 1 * qty);
         } 
         else if (cartItem.item_name === 'Porksilog') {
           updatedStock = deductIngredient(updatedStock, 'Pork Chop (Portion)', 1 * qty);
-          updatedStock = deductIngredient(updatedStock, 'Egg (Pcs)', 1 * qty);
-          updatedStock = deductIngredient(updatedStock, 'Garlic Rice (Cup)', 1 * qty);
+          updatedStock = deductIngredient(updatedStock, 'Egg', 1 * qty);
+          updatedStock = deductIngredient(updatedStock, 'Garlic Rice', 1 * qty);
         } 
         else if (cartItem.item_name === 'Iced Tea') {
-          updatedStock = deductIngredient(updatedStock, 'Iced Tea (Cup)', 1 * qty);
+          updatedStock = deductIngredient(updatedStock, 'Iced Tea', 1 * qty);
         } 
         else if (cartItem.item_name === 'Coke Mismo') {
-          updatedStock = deductIngredient(updatedStock, 'Coke Mismo (Bottle)', 1 * qty);
+          updatedStock = deductIngredient(updatedStock, 'Coke Mismo', 1 * qty);
         }
       });
 
