@@ -61,15 +61,14 @@ const POSScreen = () => {
 
   return (
     <div className="pos-container">
-      {/* --- VERTICAL NAVIGATION COLUMN --- */}
-      <button className="nav-btn" onClick={() => navigate('/kds')}>Kitchen</button>
-      <button className="nav-btn" onClick={() => navigate('/inventory')}>Inventory</button>
-      <button className="nav-btn" onClick={() => navigate('/admin')}>Shift Management</button>
-      <button className="nav-btn" onClick={() => navigate('/reservations')}>Reservations</button>
-      <button className="nav-btn" onClick={() => navigate('/manage-menu')}>Manage Menu</button>
-      {/* ---> NEW ATTENDANCE BUTTON <--- */}
-      <button className="nav-btn" onClick={() => navigate('/attendance')}>Attendance</button>
-      {/* ---------------------------------- */}
+      <div className="pos-nav-row">
+        <button className="nav-btn" onClick={() => navigate('/kds')}>Kitchen</button>
+        <button className="nav-btn" onClick={() => navigate('/inventory')}>Inventory</button>
+        <button className="nav-btn" onClick={() => navigate('/admin')}>Shift Management</button>
+        <button className="nav-btn" onClick={() => navigate('/reservations')}>Reservations</button>
+        <button className="nav-btn" onClick={() => navigate('/manage-menu')}>Manage Menu</button>
+        <button className="nav-btn" onClick={() => navigate('/attendance')}>Attendance</button>
+      </div>
 
       <div className="pos-main">
         <section className="menu-section">
