@@ -1,64 +1,35 @@
-import React, { createContext, useState } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 
-// Tell Vite's linter to allow this export
-// eslint-disable-next-line react-refresh/only-export-components
 export const InventoryContext = createContext();
 
 export const InventoryProvider = ({ children }) => {
-  // 1. The Master Stock List (Back-of-House)
-  const [inventory, setInventory] = useState([
-    { id: 'INV-001', name: 'Beef Tapa (Portion)', unitOfMeasurement: 'pcs', minStock: 20, costPerUnit: 5.50, currentStock: 50 },
-    { id: 'INV-002', name: 'Pork Chop (Portion)', unitOfMeasurement: 'pcs', minStock: 15, costPerUnit: 4.50, currentStock: 40 },
-    { id: 'INV-003', name: 'Egg', unitOfMeasurement: 'pcs', minStock: 50, costPerUnit: 0.15, currentStock: 100 },
-    { id: 'INV-004', name: 'Garlic Rice', unitOfMeasurement: 'cup', minStock: 30, costPerUnit: 2.00, currentStock: 80 },
-    { id: 'INV-005', name: 'Iced Tea', unitOfMeasurement: 'cup', minStock: 25, costPerUnit: 1.50, currentStock: 60 },
-    { id: 'INV-006', name: 'Coke Mismo', unitOfMeasurement: 'bottle', minStock: 20, costPerUnit: 3.00, currentStock: 48 },
-  ]);
+  // 1. Initialize state (usually an array for list data)
+  const [packages, setPackages] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Helper function to find an ingredient and subtract from it
-  const deductIngredient = (currentStock, ingredientName, amountToDeduct) => {
-    return currentStock.map(stockItem => 
-      stockItem.name === ingredientName 
-        ? { ...stockItem, currentStock: Math.max(0, stockItem.currentStock - amountToDeduct) } // Prevents negative stock
-        : stockItem
-    );
-  };
-
-  // 2. The Trigger Function (Used by the POS Checkout)
-  const deductInventory = (cartItems) => {
-    setInventory((prevInventory) => {
-      let updatedStock = [...prevInventory];
-
-      // Loop through everything in the cart
-      cartItems.forEach((cartItem) => {
-        const qty = cartItem.quantity;
-
-        // RECIPE MAPPING: Break meals down into ingredients!
-        if (cartItem.item_name === 'Tapsilog') {
-          updatedStock = deductIngredient(updatedStock, 'Beef Tapa (Portion)', 1 * qty);
-          updatedStock = deductIngredient(updatedStock, 'Egg', 1 * qty);
-          updatedStock = deductIngredient(updatedStock, 'Garlic Rice', 1 * qty);
-        } 
-        else if (cartItem.item_name === 'Porksilog') {
-          updatedStock = deductIngredient(updatedStock, 'Pork Chop (Portion)', 1 * qty);
-          updatedStock = deductIngredient(updatedStock, 'Egg', 1 * qty);
-          updatedStock = deductIngredient(updatedStock, 'Garlic Rice', 1 * qty);
-        } 
-        else if (cartItem.item_name === 'Iced Tea') {
-          updatedStock = deductIngredient(updatedStock, 'Iced Tea', 1 * qty);
-        } 
-        else if (cartItem.item_name === 'Coke Mismo') {
-          updatedStock = deductIngredient(updatedStock, 'Coke Mismo', 1 * qty);
-        }
+  useEffect(() => {
+    // 2. Wrap fetch in useEffect so it runs once
+    fetch('http://localhost:3000/food-package') // Note: check if it's http or https
+      .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.json();
+      })
+      .then(result => {
+        setPackages(result.data); // 3. Set the data directly
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        setLoading(false);
       });
-
-      return updatedStock; // Save the newly calculated stock
-    });
-  };
+  }, []); // Empty dependency array means "run on mount"
 
   return (
-    <InventoryContext.Provider value={{ inventory, deductInventory }}>
+    // 4. Passing loading state is often helpful for UI
+    <InventoryContext.Provider value={{ packages, loading }}>
       {children}
     </InventoryContext.Provider>
   );
 };
+
+export const useInventoryContext = () => useContext(InventoryContext);

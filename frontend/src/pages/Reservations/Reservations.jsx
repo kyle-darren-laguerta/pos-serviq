@@ -1,89 +1,179 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Reservations.css';
-
-// 1. DUMMY DATABASE: Simulating 'Reservation' and 'Client' tables
-const initialReservations = [
-  { id: 'RES-101', client: 'Nicole Bianca', date: '2026-05-15', time: '12:00 PM', location: 'Bicol University Hall', guests: 50, downpayment: 'Paid', status: 'Confirmed' },
-  { id: 'RES-102', client: 'Kyle Darren', date: '2026-05-20', time: '6:00 PM', location: 'Legazpi City Park', guests: 100, downpayment: 'Pending', status: 'Tentative' },
-  { id: 'RES-103', client: 'Eury Smith', date: '2026-06-02', time: '10:00 AM', location: 'In-Store (VIP Area)', guests: 12, downpayment: 'Paid', status: 'Confirmed' },
-];
+import { useInventoryContext } from '../../context/InventoryContext';
 
 export default function Reservations() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('bookings');
-  const [bookings] = useState(initialReservations);
+
+  const { packages } = useInventoryContext();
+  console.log(packages);
+
+  // Form State
+  const [customerName, setCustomerName] = useState('');
+  const [contact, setContact] = useState('');
+  const [location, setLocation] = useState('');
+  const [eventDate, setEventDate] = useState('');
+  const [packageSelected, setPackageSelected] = useState('Barkada Package');
+  const [downPayment, setDownPayment] = useState('');
+  const [serviceFee, setServiceFee] = useState('');
+  const [status, setStatus] = useState('Pending');
+
+
+  // TEST THIS
+  const handleSaveReservation = (e) => {
+    e.preventDefault();
+    
+    // BACKEND HANDOFF NOTE FOR DARREN:
+    // console.log("Sending to DB:", { customerName, contact, location, eventDate, packageSelected, downPayment, serviceFee, status });
+
+    fetch('http://localhost:3000/order/reservation', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        location: location,
+        reservation_date: eventDate,
+        down_payment: downPayment,
+        status: status,
+        customer_name: customerName,
+        contact_number: contact,
+        service_fee: serviceFee,
+        package_id: packageSelected,
+      })
+    })
+    .then(response => response.json())
+    .then(data => console.log('Success:', data))
+    .catch(error => console.error('Error:', error));
+    
+    alert(`Dev Note: Reservation for ${customerName} is ready for the database!`);
+    
+    // Reset Form
+    setCustomerName('');
+    setContact('');
+    setLocation('');
+    setEventDate('');
+    setPackageSelected('Barkada Package');
+    setDownPayment('');
+    setServiceFee('');
+    setStatus('Pending');
+  };
+
+  // Mock Data for UI presentation
+  const mockBookings = [
+    { id: 1, name: 'Kyle Laguerta', date: '2026-05-10', package: 'Barkada Package' },
+    { id: 2, name: 'Eury', date: '2026-05-12', package: 'Table Reservation Only' },
+  ];
 
   return (
     <div className="res-container">
-      
-      {/* LEFT: Sidebar Navigation */}
-      <aside className="res-sidebar">
-        <div className="res-logo">ServiQ Bookings</div>
-        
-        <nav className="res-nav">
-          <button 
-            className={`res-nav-btn ${activeTab === 'bookings' ? 'active' : ''}`}
-            onClick={() => setActiveTab('bookings')}
-          >
-            Upcoming Events
-          </button>
-          <button 
-            className={`res-nav-btn ${activeTab === 'clients' ? 'active' : ''}`}
-            onClick={() => setActiveTab('clients')}
-          >
-            👤 Client Directory
-          </button>
-        </nav>
-
-        <button className="back-btn" onClick={() => navigate('/')}>
+      <header className="res-header">
+        <h1>📅 ServiQ Reservations & Catering</h1>
+        <button 
+          onClick={() => navigate('/')}
+          style={{ padding: '10px 20px', backgroundColor: '#334155', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+        >
           ← Return to POS
         </button>
-      </aside>
+      </header>
 
-      {/* RIGHT: Main Content */}
-      <main className="res-main">
-        <header className="res-header">
-          <h1 className="h1">{activeTab === 'bookings' ? 'Event Calendar' : 'Client Directory'}</h1>
-          <button className="new-res-btn">+ Create New Booking</button>
-        </header>
-
-        <div className="res-content">
-          {activeTab === 'bookings' && (
-            <div className="booking-list">
-              {bookings.map((res) => (
-                <div key={res.id} className={`booking-card ${res.status.toLowerCase()}`}>
-                  <div className="card-top">
-                    <span className="res-id">{res.id}</span>
-                    <span className={`payment-tag ${res.downpayment.toLowerCase()}`}>
-                      DP: {res.downpayment}
-                    </span>
-                  </div>
-                  
-                  <div className="card-body">
-                    <h3>{res.client}</h3>
-                    <p className="event-detail">{res.location}</p>
-                    <p className="event-detail">{res.date} at {res.time}</p>
-                    <p className="guest-count">Guests: {res.guests}</p>
-                  </div>
-
-                  <div className="card-footer">
-                    <span className="status-label">{res.status}</span>
-                    <button className="detail-btn">View Contract</button>
-                  </div>
-                </div>
-              ))}
+      <div className="res-grid">
+        
+        {/* LEFT COLUMN: Booking Form */}
+        <div className="res-form-panel">
+          <h3>➕ New Booking</h3>
+          
+          <form onSubmit={handleSaveReservation}>
+            <div>
+              <label>Customer Name</label>
+              <input type="text" placeholder="e.g., John Doe" value={customerName} onChange={(e) => setCustomerName(e.target.value)} required />
             </div>
-          )}
 
-          {activeTab === 'clients' && (
-            <div className="placeholder-msg">
-              <h2>👤 Client Management</h2>
-              <p>Integration with 'Client' database table required to view profiles.</p>
+            <div>
+              <label>Contact Number</label>
+              <input type="text" placeholder="e.g., 09123456789" value={contact} onChange={(e) => setContact(e.target.value)} required />
             </div>
-          )}
+
+            <div>
+              <label>Location</label>
+              <input type="text" placeholder="e.g., Banquet Hall A" value={location} onChange={(e) => setLocation(e.target.value)} required />
+            </div>
+
+            <div className="split-row">
+              <div>
+                <label>Event Date</label>
+                <input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} required />
+              </div>
+            </div>
+
+            <div className="split-row">
+              <div>
+                <label>Down Payment</label>
+                <input type="number" min="0" step="0.01" placeholder="0.00" value={downPayment} onChange={(e) => setDownPayment(e.target.value)} required />
+              </div>
+
+              <div>
+                <label>Service Fee</label>
+                <input type="number" min="0" step="0.01" placeholder="0.00" value={serviceFee} onChange={(e) => setServiceFee(e.target.value)} required />
+              </div>
+            </div>
+
+            <div className="split-row">
+
+              <div>
+                <label>Status</label>
+                <select value={status} onChange={(e) => setStatus(e.target.value)}>
+                  <option value="Pending">Pending</option>
+                  <option value="Confirmed">Confirmed</option>
+                  <option value="Cancelled">Cancelled</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="split-row">
+              <div>
+                <label>Package Selected</label>
+                <select value={packageSelected} onChange={(e) => setPackageSelected(e.target.value)}>
+                  <option value="">Select a package</option> {/* Good practice to have a default */}
+                    {packages.map((pkg) => (
+                      <option key={pkg.package_id} value={pkg.package_id}>
+                        {pkg.package_name}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            </div>
+
+            <button type="submit" style={{ padding: '12px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', marginTop: '10px' }}>
+              Confirm Reservation
+            </button>
+          </form>
         </div>
-      </main>
+
+        {/* RIGHT COLUMN: Live Bookings */}
+        <div className="res-list-panel">
+          <h3>📋 Upcoming Events & Bookings</h3>
+          <div style={{ marginTop: '20px' }}>
+            {mockBookings.map((booking) => (
+              <div key={booking.id} className="booking-card">
+                <div className="booking-info">
+                  <h4>{booking.name}</h4>
+                  <p className="booking-details">
+                    Package: {booking.package}
+                  </p>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div className="booking-date">{booking.date}</div>
+                  <div style={{ color: '#94a3b8', fontSize: '14px' }}>{booking.time}</div>
+                  <button style={{ marginTop: '5px', padding: '4px 8px', backgroundColor: '#475569', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Modify</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 }

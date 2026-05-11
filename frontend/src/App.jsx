@@ -26,7 +26,6 @@ function App() {
             <Route path="/admin" element={<BackOffice />} />
             <Route path="/inventory" element={<Inventory />} />
             <Route path="/manage-menu" element={<ManageMenu />} />
-            <Route path="/backoffice" element={<BackOffice />} />
             <Route path="/reservations" element={<Reservations />} />
             <Route path="/attendance" element={<Attendance />} />
           </Routes>

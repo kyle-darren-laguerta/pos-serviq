@@ -141,29 +141,69 @@ export const createReceipt = async (req, res) => {
 };
 
 export const createReservation = async (req, res) => {
-    const { location, reservation_date, down_payment, status, person_id, service_fee } = req.body;
+    const { 
+        location, reservation_date, down_payment, status, 
+        customer_name, contact_number, service_fee, package_id 
+    } = req.body;
 
-    if (!location || !reservation_date || !status || !person_id) {
+    if (!location || !reservation_date || !status || !package_id) {
         return res.status(400).json({
             success: false,
-            error: "location, reservation_date, status, and person_id are required"
+            error: "Missing required fields (location, date, status, or package_id)"
         });
     }
 
+    // 1. Get a connection from the pool for the transaction
+    const connection = await db.getConnection();
+
     try {
-        const [result] = await db.query(
-            'INSERT INTO Reservation (location, reservation_date, down_payment, status, person_id, service_fee) VALUES (?, ?, ?, ?, ?, ?)',
+        // 2. Start the Transaction
+        await connection.beginTransaction();
+
+        // 3. Insert Person
+        const [personResult] = await connection.query(
+            'INSERT INTO person (full_name, contact_number, person_type) VALUES (?, ?, ?)',
+            [customer_name, contact_number, 'client']
+        );
+        const person_id = personResult.insertId;
+
+        await connection.query(
+            'INSERT INTO client (person_id) VALUES (?)',
+            [person_id]
+        );
+
+        // 4. Insert Reservation
+        const [reservationResult] = await connection.query(
+            'INSERT INTO reservation (location, reservation_date, down_payment, status, person_id, service_fee) VALUES (?, ?, ?, ?, ?, ?)',
             [location, reservation_date, down_payment ?? null, status, person_id, service_fee ?? null]
         );
+        const reservation_id = reservationResult.insertId;
+
+        // 5. Insert Reservation Package
+        await connection.query(
+            'INSERT INTO reservation_package (reservation_id, package_id, quantity) VALUES (?, ?, 1)',
+            [reservation_id, package_id]
+        );
+
+        // 6. If we reached here, commit everything to the database
+        await connection.commit();
 
         res.status(201).json({
             success: true,
             message: "Reservation created successfully",
-            reservation_id: result.insertId || null
+            reservation_id: reservation_id
         });
+
     } catch (error) {
-        console.error("Database Error:", error);
+        // 7. If ANY step fails, undo everything (Rollback)
+        await connection.rollback();
+        
+        console.error("Transaction Error (Rolled Back):", error);
         res.status(500).json({ success: false, error: "Database error occurred" });
+
+    } finally {
+        // 8. Always release the connection back to the pool
+        connection.release();
     }
 };
 
