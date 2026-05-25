@@ -140,6 +140,34 @@ export const createReceipt = async (req, res) => {
     }
 };
 
+export const getReservations = async (req, res) => {
+    try {
+        const [reservations] = await db.query(`
+            SELECT 
+                r.reservation_id,
+                r.location,
+                r.reservation_date,
+                r.down_payment,
+                r.status,
+                r.person_id,
+                r.service_fee,
+                p.full_name AS customer_name,
+                p.contact_number
+            FROM reservation r
+            LEFT JOIN person p ON r.person_id = p.person_id
+            ORDER BY r.reservation_date DESC
+        `);
+
+        res.json({
+            success: true,
+            data: reservations
+        });
+    } catch (error) {
+        console.error("Fetch Reservations Error:", error);
+        res.status(500).json({ success: false, error: "Unable to fetch reservations" });
+    }
+};
+
 export const createReservation = async (req, res) => {
     const { 
         location, reservation_date, down_payment, status, 

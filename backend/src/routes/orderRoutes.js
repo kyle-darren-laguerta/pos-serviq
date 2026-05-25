@@ -1,5 +1,5 @@
 import express from 'express';
-import { createBulkOrder, createReceipt, createReservation, updateReservation } from '../controller/orderControllers.js';
+import { createBulkOrder, createReceipt, createReservation, getReservations, updateReservation } from '../controller/orderControllers.js';
 
 const route = express.Router();
 
@@ -22,6 +22,7 @@ route.post('/receipt', createReceipt);
  * Status: Not Tested
  */
 route.post('/reservation', createReservation);
+route.get('/reservation', getReservations);
 
 // Update reservation
 /**

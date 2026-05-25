@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Reservations.css';
 import { useInventoryContext } from '../../context/InventoryContext';
@@ -18,7 +18,31 @@ export default function Reservations() {
   const [downPayment, setDownPayment] = useState('');
   const [serviceFee, setServiceFee] = useState('');
   const [status, setStatus] = useState('Pending');
+  const [reservations, setReservations] = useState([]);
+  const [reservationError, setReservationError] = useState(null);
 
+  const fetchReservations = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/order/reservation');
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setReservations(result.data);
+        setReservationError(null);
+      } else {
+        setReservations([]);
+        setReservationError(result.error || 'Unable to load reservations.');
+      }
+    } catch (error) {
+      setReservations([]);
+      setReservationError('Could not connect to the server.');
+      console.error('Reservations fetch failed:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchReservations();
+  }, []);
 
   // TEST THIS
   const handleSaveReservation = (e) => {
@@ -44,7 +68,12 @@ export default function Reservations() {
       })
     })
     .then(response => response.json())
-    .then(data => console.log('Success:', data))
+    .then(data => {
+      console.log('Success:', data);
+      if (data.success) {
+        fetchReservations();
+      }
+    })
     .catch(error => console.error('Error:', error));
     
     alert(`Dev Note: Reservation for ${customerName} is ready for the database!`);
@@ -155,21 +184,26 @@ export default function Reservations() {
         <div className="res-list-panel">
           <h3>📋 Upcoming Events & Bookings</h3>
           <div style={{ marginTop: '20px' }}>
-            {mockBookings.map((booking) => (
-              <div key={booking.id} className="booking-card">
-                <div className="booking-info">
-                  <h4>{booking.name}</h4>
-                  <p className="booking-details">
-                    Package: {booking.package}
-                  </p>
+            {reservationError && <div className="error-message">{reservationError}</div>}
+            {reservations.length === 0 && !reservationError ? (
+              <p className="empty-list">No reservations found.</p>
+            ) : (
+              reservations.map((reservation) => (
+                <div key={reservation.reservation_id} className="booking-card">
+                  <div className="booking-info">
+                    <h4>{reservation.customer_name || 'Guest'}</h4>
+                    <p className="booking-details">Location: {reservation.location}</p>
+                    <p className="booking-details">Status: {reservation.status}</p>
+                    <p className="booking-details">Down Payment: ₱{reservation.down_payment ?? '0.00'}</p>
+                    <p className="booking-details">Service Fee: ₱{reservation.service_fee ?? '0.00'}</p>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div className="booking-date">{reservation.reservation_date?.split('T')[0] || reservation.reservation_date}</div>
+                    <div style={{ color: '#94a3b8', fontSize: '14px' }}>ID: {reservation.reservation_id}</div>
+                  </div>
                 </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div className="booking-date">{booking.date}</div>
-                  <div style={{ color: '#94a3b8', fontSize: '14px' }}>{booking.time}</div>
-                  <button style={{ marginTop: '5px', padding: '4px 8px', backgroundColor: '#475569', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Modify</button>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
