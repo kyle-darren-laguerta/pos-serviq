@@ -1,5 +1,5 @@
 import express from 'express';
-import { addAddon, addMenu, addPackage, getAddon, getMenu, updateAddon, updateMenuItem } from '../controller/menuControllers.js';
+import { addAddon, addMenu, getAddon, getMenu, updateAddon, updateMenuItem } from '../controller/menuControllers.js';
 
 const route = express.Router();
 
@@ -49,24 +49,5 @@ route.patch('/addon/:id', updateAddon);
     }
  */
 route.put('/addon/:id', updateAddon);
-
-/**
- * Description: Add food package
- * Status: Not tested
- * {
-        "packageName": "name"
-        "items": [
-            {
-                "id": 1
-                "quantity": 3
-            },
-            {
-                "id": 2
-                "quantity": 2
-            }
-        ]
-    }
- */
-route.post('/package', addPackage);
 
 export default route;

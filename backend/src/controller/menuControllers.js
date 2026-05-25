@@ -15,7 +15,7 @@ export const getMenu = async (req, res) => {
         }
 
         res.json({
-            sucess: true,
+            success: true,
             data: rows
         });
     } catch (error) {
@@ -204,69 +204,5 @@ export const updateAddon = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: "Database error" });
-    }
-};
-
-/*
-    Request Body Structure
-
-    {
-        "packageName": "name"
-        "items": [
-            {
-                "id": 1
-                "quantity": 3
-            },
-            {
-                "id": 2
-                "quantity": 2
-            }
-        ]
-    }
-*/
-export const addPackage = async (req, res) => {
-    const { packageName, items } = req.body;
-
-    const connection = await db.getConnection();
-    await connection.beginTransaction();
-
-    try {
-        // Calculate total price from menu item prices and quantities
-        let totalPrice = 0;
-        for (const item of items) {
-            const [[menuItem]] = await connection.query(
-                `SELECT price FROM menu_item WHERE menu_item_id = ?`,
-                [item.id]
-            );
-
-            if (!menuItem) throw new Error(`Menu item with id ${item.id} not found`);
-
-            totalPrice += menuItem.price * item.quantity;
-        }
-
-        // Insert package with the calculated total price
-        const [packageResult] = await connection.query(
-            `INSERT INTO food_package (package_name, total_price) VALUES (?, ?)`,
-            [packageName, totalPrice]
-        );
-
-        const generatedPackageId = packageResult.insertId;
-
-        // Insert each menu item into the junction table
-        for (const item of items) {
-            await connection.query(
-                `INSERT INTO package_menu_item (menu_item_id, package_id, quantity) VALUES (?, ?, ?)`,
-                [item.id, generatedPackageId, item.quantity]
-            );
-        }
-
-        await connection.commit();
-        res.status(201).json({ success: true, message: "Package created successfully", totalPrice });
-    } catch (error) {
-        await connection.rollback();
-        console.error("Transaction Error:", error);
-        res.status(500).json({ success: false, error: error.message || "Database error occurred" });
-    } finally {
-        connection.release();
     }
 };

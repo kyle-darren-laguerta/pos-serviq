@@ -26,6 +26,12 @@ export default function BackOffice() {
   const [foodPackages, setFoodPackages] = useState([]);
   const [error, setError] = useState(null);
 
+  const items = [{
+    id: 3,
+    name: "Kewpie",
+    price: 50
+  }];
+
   // Fetch menu items on component mount
   useEffect(() => {
     fetchMenuItems();
@@ -33,12 +39,18 @@ export default function BackOffice() {
   }, []);
 
   const fetchMenuItems = async () => {
+    console.log("test1");
     try {
+      console.log("test2");
       const response = await fetch('http://localhost:3000/menu/item');
       const result = await response.json();
+      console.log("test3");
       if (response.ok && result.success) {
+        console.log("test4");
         setMenuItems(result.data);
+        
         setError(null);
+        console.log("test5");
       } else {
         setError(result.message || 'Failed to fetch menu items');
       }
@@ -104,40 +116,47 @@ export default function BackOffice() {
     });
 
     const payload = {
-        packageName,
-        items: selectedItems.map(item => ({
-          id: item.menu_item_id,       // ✅ maps to what the backend expects
-          quantity: item.quantity
-        }))
-      };
-
-      const response = await fetch('http://localhost:3000/menu/package', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-    const newPackage = {
-      id: `PKG-${Date.now()}`,
-      name: packageName,
-      description: packageDescription,
-      price: packagePrice || totalPrice,
-      items: selectedItems.map(item => {
-        const menuItem = menuItems.find(m => m.menu_item_id === item.menu_item_id);
-        return {
-          menu_item_id: item.menu_item_id,
-          name: menuItem?.name || 'Unknown',
-          quantity: item.quantity,
-          itemPrice: menuItem?.price || 0
-        };
-      })
+      package_name: packageName,
+      total_price: totalPrice,
+      items: selectedItems.map(item => ({
+        id: item.menu_item_id,
+        quantity: item.quantity
+      }))
     };
 
-    setPackageName('');
-    setPackageDescription('');
-    setPackagePrice('');
-    setSelectedItems([]);
-    setError(null);
+    const response = await fetch('http://localhost:3000/food-package/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const result = await response.json();
+    if (response.ok && result.success) {
+      const newPackage = {
+        id: result.data?.package_id || `PKG-${Date.now()}`,
+        package_name: packageName,
+        description: packageDescription,
+        total_price: totalPrice,
+        items: selectedItems.map(item => {
+          const menuItem = menuItems.find(m => m.menu_item_id === item.menu_item_id);
+          return {
+            menu_item_id: item.menu_item_id,
+            name: menuItem?.name || 'Unknown',
+            quantity: item.quantity,
+            itemPrice: menuItem?.price || 0
+          };
+        })
+      };
+
+      setFoodPackages(prev => [...prev, newPackage]);
+      setPackageName('');
+      setPackageDescription('');
+      setPackagePrice('');
+      setSelectedItems([]);
+      setError(null);
+    } else {
+      setError(result.message || 'Failed to create food package');
+    }
   };
 
   // CREATE a DELETE query here
@@ -176,12 +195,6 @@ export default function BackOffice() {
             onClick={() => setActiveTab('packages')}
           >
             📦 Food Packages
-          </button>
-          <button 
-            className="sidebar-btn"
-            onClick={() => navigate('/manage-menu')}
-          >
-            🍽️ Manage Menu
           </button>
         </nav>
 

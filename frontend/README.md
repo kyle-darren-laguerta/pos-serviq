@@ -1,9 +1,9 @@
 #### TODO
-- Remove package route in menu_item router 
-- Redirect the request of create package to foodPackage router
 - Show the reservation created
 - Implement Attendance
 - Implement the Shift Management
+- Implement Order
+- Fix Food Package Not Selecting Menu Item
 
 #### DONE
 - Get, Add, and Update ingredient

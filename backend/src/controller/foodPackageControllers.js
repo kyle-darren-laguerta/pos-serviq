@@ -105,28 +105,31 @@ export const getFoodPackageById = async (req, res) => {
 export const createFoodPackage = async (req, res) => {
     const { package_name, total_price, items } = req.body;
 
+    const connection = await db.getConnection();
+
     try {
+        await connection.beginTransaction();
+
         // Insert into food_package table
-        const [result] = await db.query(
+        const [result] = await connection.query(
             `INSERT INTO food_package (package_name, total_price) VALUES (?, ?)`,
             [package_name, total_price]
         );
 
         const packageId = result.insertId;
 
-        // Insert menu items into package_menu_item table
-        if (items && items.length > 0) {
-            const itemValues = items.map(item => [
-                item.menu_item_id,
-                packageId,
-                item.quantity
-            ]);
+        // Insert each menu item into the package_menu_item junction table
+        for (const item of items) {
+            const menuItemId = item.menu_item_id || item.id;
+            const quantity = item.quantity;
 
-            await db.query(
-                `INSERT INTO package_menu_item (menu_item_id, package_id, quantity) VALUES ?`,
-                [itemValues]
+            await connection.query(
+                `INSERT INTO package_menu_item (menu_item_id, package_id, quantity) VALUES (?, ?, ?)`,
+                [menuItemId, packageId, quantity]
             );
         }
+
+        await connection.commit();
 
         res.status(201).json({
             success: true,
@@ -134,10 +137,17 @@ export const createFoodPackage = async (req, res) => {
             data: { package_id: packageId }
         });
     } catch (error) {
+        if (connection) {
+            await connection.rollback();
+        }
         console.error(error);
         res.status(500).json({ 
             success: false, 
             message: "Database error" 
         });
+    } finally {
+        if (connection) {
+            connection.release();
+        }
     }
 };

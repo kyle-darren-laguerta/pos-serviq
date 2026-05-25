@@ -63,7 +63,7 @@ export default function Reservations() {
   // Mock Data for UI presentation
   const mockBookings = [
     { id: 1, name: 'Kyle Laguerta', date: '2026-05-10', package: 'Barkada Package' },
-    { id: 2, name: 'Eury', date: '2026-05-12', package: 'Table Reservation Only' },
+    { id: 2, name: 'Joeven Gatuteo', date: '2026-05-12', package: 'Table Reservation Only' },
   ];
 
   return (
