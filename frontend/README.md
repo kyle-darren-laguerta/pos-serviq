@@ -1,6 +1,6 @@
 #### TODO
-- Implement Order
-- fix the query in updating ingredient when there are orders
+- Add waste item managment
+- fix the query in updating ingredient when there are food package
 
 #### DONE 
 - Get, Add, and Update ingredient

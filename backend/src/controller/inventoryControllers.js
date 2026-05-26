@@ -15,7 +15,7 @@ export const getIngredients = async (req, res) => {
         }
 
         res.json({
-            sucess: true,
+            success: true,
             data: rows
         });
     } catch (error) {

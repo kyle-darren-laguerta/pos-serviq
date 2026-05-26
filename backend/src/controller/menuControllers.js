@@ -27,16 +27,16 @@ export const getMenu = async (req, res) => {
 export const addMenu = async (req, res) => {
     const { name, price } = req.body;
 
+    if (!name || price === undefined || isNaN(price)) {
+        return res.status(400).json({ success: false, message: 'Missing or invalid menu item fields' });
+    }
+
     try {
-        const [rows] = await db.query("INSERT INTO menu_item (name, price) VALUES (?, ?)", [name, price]);
+        const [result] = await db.query("INSERT INTO menu_item (name, price) VALUES (?, ?)", [name, price]);
 
-        if (rows.length === 0) {
-            return res.status(404).json({ message: "There is menu_item" });
-        }
-
-        res.json({
-            sucess: true,
-            data: rows
+        res.status(201).json({
+            success: true,
+            data: { insertId: result.insertId }
         });
     } catch (error) {
         console.error(error);
@@ -101,6 +101,71 @@ export const updateMenuItem = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: "Database error" });
+    }
+};
+
+export const getRecipe = async (req, res) => {
+    const menuItemId = req.params.id;
+
+    try {
+        const [rows] = await db.query(
+            `SELECT r.menu_item_id, r.ingredient_id, r.quantity_required, r.unit_of_measure,
+                    i.ingredient_name
+             FROM recipe r
+             JOIN ingredient i ON r.ingredient_id = i.ingredient_id
+             WHERE r.menu_item_id = ?`,
+            [menuItemId]
+        );
+
+        res.json({
+            success: true,
+            data: rows
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Database error' });
+    }
+};
+
+export const saveRecipe = async (req, res) => {
+    const menuItemId = req.params.id;
+    const { recipe } = req.body;
+
+    if (!menuItemId) {
+        return res.status(400).json({ success: false, message: 'Menu item ID is required' });
+    }
+
+    if (!Array.isArray(recipe)) {
+        return res.status(400).json({ success: false, message: 'Recipe must be an array' });
+    }
+
+    const validRows = recipe.filter(row => row.ingredient_id && row.quantity_required !== undefined && row.unit_of_measure);
+
+    try {
+        await db.query('DELETE FROM recipe WHERE menu_item_id = ?', [menuItemId]);
+
+        if (validRows.length > 0) {
+            const insertValues = validRows.map(row => [
+                menuItemId,
+                row.ingredient_id,
+                row.quantity_required,
+                row.unit_of_measure
+            ]);
+
+            await db.query(
+                'INSERT INTO recipe (menu_item_id, ingredient_id, quantity_required, unit_of_measure) VALUES ?',
+                [insertValues]
+            );
+        }
+
+        res.json({
+            success: true,
+            message: 'Recipe saved successfully',
+            data: validRows
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Database error' });
     }
 };
 

@@ -1,5 +1,5 @@
 import express from 'express';
-import { addAddon, addMenu, getAddon, getMenu, updateAddon, updateMenuItem } from '../controller/menuControllers.js';
+import { addAddon, addMenu, getAddon, getMenu, getRecipe, saveRecipe, updateAddon, updateMenuItem } from '../controller/menuControllers.js';
 
 const route = express.Router();
 
@@ -20,6 +20,18 @@ route.post('/item', addMenu);
  * Status: Working
  */
 route.patch('/item/:id', updateMenuItem);
+
+/**
+ * Description: Get recipe for a menu item
+ * Status: Working
+ */
+route.get('/recipe/:id', getRecipe);
+
+/**
+ * Description: Save or replace recipe for a menu item
+ * Status: Working
+ */
+route.put('/recipe/:id', saveRecipe);
 
 /**
  * Description: Get all the addon

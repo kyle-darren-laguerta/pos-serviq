@@ -2,22 +2,116 @@ import db from '../config/db.js';
 
 // Deduct ingredient stock
 
+// /* 
+//     Request Body Structure
+
+//     {
+//         "items": [
+//             {
+//             "menu_item_id": 1,
+//             "quantity": 2,
+//             "addons": [
+//                 { "id": 1 },
+//             ]
+//             },
+//             {
+//             "menu_item_id": 2,
+//             "quantity": 1,
+//             "addons": []
+//             }
+//         ]
+//     }
+// */
+// export const createBulkOrder = async (req, res) => {
+//     const { items } = req.body;
+
+//     const connection = await db.getConnection();
+
+//     try {
+//         await connection.beginTransaction();
+
+//         // 1. Create the Parent Order Record first
+//         const [orderResult] = await connection.query(
+//             'INSERT INTO order_table () VALUES ()',
+//             []
+//         );
+
+//         const generatedOrderId = orderResult.insertId;
+
+//         for (const item of items) {
+//             // 2. Fetch current price for the Menu Item
+//             const [menuItem] = await connection.query(
+//                 'SELECT price FROM menu_item WHERE menu_item_id = ?',
+//                 [item.menu_item_id]
+//             );
+
+//             // 3. Insert into line_item
+//             const [lineItemResult] = await connection.query(
+//                 'INSERT INTO line_item (order_id, menu_item_id, quantity, price_at_purchase) VALUES (?, ?, ?, ?)',
+//                 [generatedOrderId, item.menu_item_id, item.quantity, menuItem[0].price]
+//             );
+
+//             const newLineItemId = lineItemResult.insertId;
+
+//             // 4. Deduct ingredient stock based on this menu item's recipe
+//             //    Formula: deduction = ordered quantity × quantity_required per recipe
+//             await connection.query(
+//                 `UPDATE ingredient i
+//                  JOIN (
+//                      SELECT
+//                          r.ingredient_id,
+//                          (? * r.quantity_required) AS total_deduction
+//                      FROM recipe r
+//                      WHERE r.menu_item_id = ?
+//                  ) AS deductions ON i.ingredient_id = deductions.ingredient_id
+//                  SET i.current_stock = i.current_stock - deductions.total_deduction`,
+//                 [item.quantity, item.menu_item_id]
+//             );
+
+//             // 5. Handle Addons for this specific line item
+//             if (item.addons && item.addons.length > 0) {
+//                 for (const addon of item.addons) {
+//                     const [addonData] = await connection.query(
+//                         'SELECT price FROM addon WHERE addon_id = ?',
+//                         [addon.id]
+//                     );
+
+//                     await connection.query(
+//                         'INSERT INTO line_item_addon (line_item_id, addon_id, price_at_purchase, quantity) VALUES (?, ?, ?, ?)',
+//                         [newLineItemId, addon.id, addonData[0].price, addon.quantity]
+//                     );
+//                 }
+//             }
+//         }
+
+//         await connection.commit();
+//         res.status(201).json({ success: true, message: "Order placed successfully" });
+
+//     } catch (error) {
+//         await connection.rollback();
+//         console.error("Transaction Error:", error);
+//         res.status(500).json({ success: false, error: "Database error occurred" });
+//     } finally {
+//         connection.release();
+//     }
+// };
+
 /* 
     Request Body Structure
 
     {
         "items": [
             {
-            "menu_item_id": 1,
-            "quantity": 2,
-            "addons": [
-                { "id": 1 },
-            ]
+                "menu_item_id": 1,        // ─┐ provide one or the other,
+                "quantity": 2,            //  │ not both
+                "addons": [               // <┘ addons only apply to menu items
+                    { "id": 1, "quantity": 1 }
+                ]
             },
             {
-            "menu_item_id": 2,
-            "quantity": 1,
-            "addons": []
+                "package_id": 3,          // food package — no addons
+                "quantity": 1,
+                "addons": []
             }
         ]
     }
@@ -25,65 +119,139 @@ import db from '../config/db.js';
 export const createBulkOrder = async (req, res) => {
     const { items } = req.body;
 
-    // Start a session connection to handle the transaction
     const connection = await db.getConnection();
 
     try {
         await connection.beginTransaction();
 
-        // 1. Create the Parent Order Record first
+        // 1. Create the parent order record
         const [orderResult] = await connection.query(
             'INSERT INTO order_table () VALUES ()',
             []
         );
-
-        // This is the Database generating the Order ID for you
         const generatedOrderId = orderResult.insertId;
 
         for (const item of items) {
-            // 1. Fetch current price for the Menu Item to "freeze" it for the receipt
-            const [menuItem] = await connection.query(
-                'SELECT price FROM menu_item WHERE menu_item_id = ?', 
-                [item.menu_item_id]
-            );
+            const isPackage = !!item.package_id;
 
-            // 2. Insert into line_item
-            const [lineItemResult] = await connection.query(
-                'INSERT INTO line_item (order_id, menu_item_id, quantity, price_at_purchase) VALUES (?, ?, ?, ?)',
-                [generatedOrderId, item.menu_item_id, item.quantity, menuItem[0].price]
-            );
+            if (isPackage) {
+                // ── PACKAGE ITEM PATH ──────────────────────────────────────
 
-            const newLineItemId = lineItemResult.insertId;
+                // 2a. Fetch package price
+                const [packageRows] = await connection.query(
+                    'SELECT total_price FROM food_package WHERE package_id = ?',
+                    [item.package_id]
+                );
 
-            // 3. Handle Addons for this specific line item
-            if (item.addons && item.addons.length > 0) {
-                for (const addon of item.addons) {
-                    // Fetch current price for the Addon
-                    const [addonData] = await connection.query(
-                        'SELECT price FROM addon WHERE addon_id = ?', 
-                        [addon.id]
-                    );
+                if (!packageRows.length) {
+                    throw new Error(`Food package ${item.package_id} not found`);
+                }
 
-                    // Insert into line_item_addon bridge table
-                    await connection.query(
-                        'INSERT INTO line_item_addon (line_item_id, addon_id, price_at_purchase, quantity) VALUES (?, ?, ?, ?)',
-                        [newLineItemId, addon.id, addonData[0].price, addon.quantity]
-                    );
+                // 3a. Insert line_item — menu_item_id is NULL, package_id is set
+                await connection.query(
+                    `INSERT INTO line_item
+                        (order_id, package_id, menu_item_id, quantity, price_at_purchase)
+                     VALUES (?, ?, NULL, ?, ?)`,
+                    [
+                        generatedOrderId,
+                        item.package_id,
+                        item.quantity,
+                        packageRows[0].total_price
+                    ]
+                );
+
+                // 4a. Deduct ingredients for every menu item inside the package
+                //     Formula: ordered_qty × package_menu_item.quantity × recipe.quantity_required
+                await connection.query(
+                    `UPDATE ingredient i
+                     JOIN (
+                         SELECT
+                             r.ingredient_id,
+                             (? * pmi.quantity * r.quantity_required) AS total_deduction
+                         FROM package_menu_item pmi
+                         JOIN recipe r ON r.menu_item_id = pmi.menu_item_id
+                         WHERE pmi.package_id = ?
+                     ) AS deductions ON i.ingredient_id = deductions.ingredient_id
+                     SET i.current_stock = i.current_stock - deductions.total_deduction`,
+                    [item.quantity, item.package_id]
+                );
+
+                // Addons are not supported for package items
+
+            } else {
+                // ── MENU ITEM PATH ─────────────────────────────────────────
+
+                // 2b. Fetch current price for the menu item
+                const [menuItemRows] = await connection.query(
+                    'SELECT price FROM menu_item WHERE menu_item_id = ?',
+                    [item.menu_item_id]
+                );
+
+                if (!menuItemRows.length) {
+                    throw new Error(`Menu item ${item.menu_item_id} not found`);
+                }
+
+                // 3b. Insert line_item — package_id is NULL, menu_item_id is set
+                const [lineItemResult] = await connection.query(
+                    `INSERT INTO line_item
+                        (order_id, menu_item_id, package_id, quantity, price_at_purchase)
+                     VALUES (?, ?, NULL, ?, ?)`,
+                    [
+                        generatedOrderId,
+                        item.menu_item_id,
+                        item.quantity,
+                        menuItemRows[0].price
+                    ]
+                );
+
+                const newLineItemId = lineItemResult.insertId;
+
+                // 4b. Deduct ingredient stock based on this menu item's recipe
+                //     Formula: ordered_qty × recipe.quantity_required
+                await connection.query(
+                    `UPDATE ingredient i
+                     JOIN (
+                         SELECT
+                             r.ingredient_id,
+                             (? * r.quantity_required) AS total_deduction
+                         FROM recipe r
+                         WHERE r.menu_item_id = ?
+                     ) AS deductions ON i.ingredient_id = deductions.ingredient_id
+                     SET i.current_stock = i.current_stock - deductions.total_deduction`,
+                    [item.quantity, item.menu_item_id]
+                );
+
+                // 5b. Handle addons for this specific line item
+                if (item.addons && item.addons.length > 0) {
+                    for (const addon of item.addons) {
+                        const [addonData] = await connection.query(
+                            'SELECT price FROM addon WHERE addon_id = ?',
+                            [addon.id]
+                        );
+
+                        if (!addonData.length) {
+                            throw new Error(`Addon ${addon.id} not found`);
+                        }
+
+                        await connection.query(
+                            `INSERT INTO line_item_addon
+                                (line_item_id, addon_id, price_at_purchase, quantity)
+                             VALUES (?, ?, ?, ?)`,
+                            [newLineItemId, addon.id, addonData[0].price, addon.quantity]
+                        );
+                    }
                 }
             }
         }
 
-        // Commit all inserts if no errors occurred
         await connection.commit();
         res.status(201).json({ success: true, message: "Order placed successfully" });
 
     } catch (error) {
-        // Undo everything if any part of the order fails
         await connection.rollback();
         console.error("Transaction Error:", error);
-        res.status(500).json({ success: false, error: "Database error occurred" });
+        res.status(500).json({ success: false, error: error.message ?? "Database error occurred" });
     } finally {
-        // Always release the connection back to the pool
         connection.release();
     }
 };

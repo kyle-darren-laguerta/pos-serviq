@@ -33,7 +33,7 @@ export default function Inventory() {
       const response = await fetch('http://localhost:3000/inventory/ingredient');
       const result = await response.json();
 
-      if (response.ok && result.sucess) {
+      if (response.ok && result.success) {
         setInventory(result.data);
         setError(null);
       } else {
