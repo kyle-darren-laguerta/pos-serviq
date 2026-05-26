@@ -1,45 +1,46 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OrderContext } from '../../context/OrderContext';
+import { MenuContext } from '../../context/MenuContext';
 import ConfirmationPopup from '../components/ConfirmationPopup/ConfirmationPopup';
 import './POSScreen.css';
 
-const initialMenuItems = [
-  { id: 1, item_name: 'Tapsilog', price: 150.00, category: 'Meals' },
-  { id: 2, item_name: 'Porksilog', price: 140.00, category: 'Meals' },
-  { id: 3, item_name: 'Iced Tea', price: 50.00, category: 'Drinks' },
-  { id: 4, item_name: 'Coke Mismo', price: 30.00, category: 'Drinks' },
-  { id: 5, item_name: 'Barkada Package', price: 450.00, category: 'Packages' },
-  { id: 6, item_name: 'Couple Promo', price: 280.00, category: 'Packages' }
-];
-
 const POSScreen = () => {
   const navigate = useNavigate();
-  
-  // Pulling the Global Brain function!
   const { addOrder } = useContext(OrderContext);
+  const { menuItems, addons, menuError } = useContext(MenuContext);
 
-  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
-  const [activeCategory, setActiveCategory] = useState('All'); 
+  const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [cart, setCart] = useState([]);
+  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
+  const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
+  const [statusMessage, setStatusMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const addToCart = (item) => {
+
+  const addToCart = (item, source = 'menu') => {
+    if (source === 'addon') {
+      
+    }
+
     setCart((prevCart) => {
-      const existingItem = prevCart.find((cartItem) => cartItem.id === item.id);
+      const existingItem = prevCart.find((cartItem) => cartItem.menu_item_id === item.menu_item_id);
       if (existingItem) {
         return prevCart.map((cartItem) =>
-          cartItem.id === item.id ? { ...cartItem, quantity: cartItem.quantity + 1 } : cartItem
+          cartItem.menu_item_id === item.menu_item_id
+            ? { ...cartItem, quantity: cartItem.quantity + 1 }
+            : cartItem
         );
       }
       return [...prevCart, { ...item, quantity: 1 }];
     });
   };
 
-  const removeFromCart = (id) => {
-    setCart((prevCart) => 
+  const removeFromCart = (menu_item_id) => {
+    setCart((prevCart) =>
       prevCart.reduce((acc, item) => {
-        if (item.id === id) {
+        if (item.menu_item_id === menu_item_id) {
           if (item.quantity > 1) {
             acc.push({ ...item, quantity: item.quantity - 1 });
           }
@@ -51,13 +52,50 @@ const POSScreen = () => {
     );
   };
 
-  const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  const filteredMenu = initialMenuItems.filter((item) => {
-    const matchesCategory = activeCategory === 'All' || item.category === activeCategory;
-    const matchesSearch = item.item_name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  const displayItems = activeCategory === 'Addon' ? addons : menuItems;
+  const filteredItems = displayItems.filter((item) =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleSubmitOrder = async () => {
+    if (cart.length === 0) return;
+
+    setIsSubmittingOrder(true);
+    setStatusMessage('');
+    setErrorMessage('');
+
+    const orderPayload = {
+      items: cart.map((item) => ({
+        menu_item_id: item.menu_item_id,
+        quantity: item.quantity,
+        addons: []
+      }))
+    };
+
+    try {
+      const response = await fetch('http://localhost:3000/order/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderPayload)
+      });
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        addOrder(cart, totalPrice, 'Table 1');
+        setCart([]);
+        setStatusMessage('Order submitted successfully.');
+      } else {
+        setErrorMessage(result.message || result.error || 'Unable to submit order');
+      }
+    } catch (error) {
+      setErrorMessage('Failed to send order. Check backend server.');
+    } finally {
+      setIsSubmittingOrder(false);
+      setIsCheckoutModalOpen(false);
+    }
+  };
 
   return (
     <div className="pos-container">
@@ -73,32 +111,49 @@ const POSScreen = () => {
       <div className="pos-main">
         <section className="menu-section">
           <div className="menu-controls">
-            <input 
-              type="text" 
-              placeholder="Search menu items..." 
+            <input
+              type="text"
+              placeholder="Search menu items..."
               className="search-bar"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)} 
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
             <div className="category-filters">
-              {['All', 'Drinks', 'Meals', 'Packages'].map(cat => (
-                <button 
+              {['All', 'Addon'].map((cat) => (
+                <button
                   key={cat}
                   className={`filter-btn ${activeCategory === cat ? 'active' : ''}`}
                   onClick={() => setActiveCategory(cat)}
-                >{cat}</button>
+                >
+                  {cat}
+                </button>
               ))}
             </div>
           </div>
 
-          <div className="item-grid">
-            {filteredMenu.map((item) => (
-              <div key={item.id} className="item-card" onClick={() => addToCart(item)}>
-                <h4>{item.item_name}</h4>
-                <p>₱{item.price.toFixed(2)}</p>
-              </div>
-            ))}
-          </div>
+          {menuError && <p className="error-text">{menuError}</p>}
+          {errorMessage && <p className="error-text">{errorMessage}</p>}
+          {filteredItems.length === 0 ? (
+            <p className="empty-cart">No items found.</p>
+          ) : (
+            <div className="item-grid">
+              {filteredItems.map((item) => {
+                const itemId = item.menu_item_id ?? item.addon_id;
+                const isAddon = activeCategory === 'Addon';
+                return (
+                  <div
+                    key={itemId}
+                    className={`item-card ${isAddon ? 'addon-card' : ''}`}
+                    onClick={() => !isAddon && addToCart(item, 'menu')}
+                  >
+                    <h4>{item.name}</h4>
+                    <p>₱{parseFloat(item.price).toFixed(2)}</p>
+                    {isAddon && <span className="addon-pill">Addon</span>}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </section>
 
         <section className="order-section">
@@ -112,14 +167,14 @@ const POSScreen = () => {
               <p className="empty-cart">Cart is empty</p>
             ) : (
               cart.map((item) => (
-                <div key={item.id} className="cart-item">
+                <div key={item.menu_item_id} className="cart-item">
                   <div className="cart-item-info">
                     <span className="qty">{item.quantity}x</span>
-                    <span className="name">{item.item_name}</span>
+                    <span className="name">{item.name}</span>
                   </div>
                   <div className="cart-item-actions">
                     <span className="price">₱{(item.price * item.quantity).toFixed(2)}</span>
-                    <button className="remove-btn" onClick={() => removeFromCart(item.id)}>−</button>
+                    <button className="remove-btn" onClick={() => removeFromCart(item.menu_item_id)}>−</button>
                   </div>
                 </div>
               ))
@@ -133,11 +188,13 @@ const POSScreen = () => {
             </div>
             <button 
               className="checkout-btn"
-              disabled={cart.length === 0}
+              disabled={cart.length === 0 || isSubmittingOrder}
               onClick={() => setIsCheckoutModalOpen(true)}
             >
-              Proceed to Checkout
+              {isSubmittingOrder ? 'Submitting...' : 'Proceed to Checkout'}
             </button>
+            {statusMessage && <p className="success-text">{statusMessage}</p>}
+            {errorMessage && <p className="error-text">{errorMessage}</p>}
           </div>
         </section>
       </div> 
@@ -146,14 +203,7 @@ const POSScreen = () => {
         isOpen={isCheckoutModalOpen}
         message={`Total amount: ₱${totalPrice.toFixed(2)}. Confirm transaction?`}
         onCancel={() => setIsCheckoutModalOpen(false)}
-        onConfirm={() => {
-          // This is the magic line that sends it to the cloud!
-          addOrder(cart, totalPrice, "Table 1"); 
-          
-          alert("Order Sent to Kitchen! 🧑‍🍳");
-          setCart([]); 
-          setIsCheckoutModalOpen(false); 
-        }}
+        onConfirm={handleSubmitOrder}
       />
     </div> 
   );

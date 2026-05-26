@@ -66,8 +66,8 @@ export const createBulkOrder = async (req, res) => {
 
                     // Insert into line_item_addon bridge table
                     await connection.query(
-                        'INSERT INTO line_item_addon (line_item_id, addon_id, price_at_purchase) VALUES (?, ?, ?)',
-                        [newLineItemId, addon.id, addonData[0].price]
+                        'INSERT INTO line_item_addon (line_item_id, addon_id, price_at_purchase, quantity) VALUES (?, ?, ?, ?)',
+                        [newLineItemId, addon.id, addonData[0].price, addon.quantity]
                     );
                 }
             }

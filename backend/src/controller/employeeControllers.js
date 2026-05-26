@@ -1,9 +1,13 @@
 import db from '../config/db.js';
 
 export const getEmployees = async (req, res) => {
-    const { id } = req.query;
     try {
-        const [rows] = await db.query("SELECT * FROM employee");
+        const [rows] = await db.query(`
+            SELECT e.employee_id, e.full_name, e.hire_date, e.contact_number, e.overtime_rate, e.role_id, r.role_name
+            FROM employee e
+            LEFT JOIN Role r ON e.role_id = r.role_id
+            ORDER BY e.employee_id ASC
+        `);
 
         res.json({
             success: true,
@@ -19,19 +23,66 @@ export const getEmployeeById = async (req, res) => {
     const id = req.params.id;
 
     try {
-        const [rows] = await db.query("SELECT * FROM employee WHERE employee_id = ?", [id]);
+        const [rows] = await db.query(
+            `SELECT e.employee_id, e.full_name, e.hire_date, e.contact_number, e.overtime_rate, e.role_id, r.role_name
+             FROM employee e
+             LEFT JOIN Role r ON e.role_id = r.role_id
+             WHERE e.employee_id = ?`,
+            [id]
+        );
 
         if (rows.length === 0) {
             return res.status(404).json({ message: "Employee not found" });
         }
 
         res.json({
-            sucess: true,
+            success: true,
             data: rows[0]
         });
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: "Database error" });
+    }
+};
+
+export const getRoles = async (req, res) => {
+    try {
+        const [rows] = await db.query("SELECT role_id, role_name FROM Role ORDER BY role_name ASC");
+
+        res.json({
+            success: true,
+            data: rows
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "Database error" });
+    }
+};
+
+export const createEmployee = async (req, res) => {
+    const { full_name, hire_date, contact_number, overtime_rate, role_id } = req.body;
+
+    if (!full_name || !hire_date || !contact_number || overtime_rate === undefined || !role_id) {
+        return res.status(400).json({
+            success: false,
+            message: 'full_name, hire_date, contact_number, overtime_rate, and role_id are required'
+        });
+    }
+
+    try {
+        const [result] = await db.query(
+            'INSERT INTO employee (full_name, hire_date, contact_number, overtime_rate, role_id) VALUES (?, ?, ?, ?, ?)',
+            [full_name, hire_date, contact_number, overtime_rate, role_id]
+        );
+
+        res.status(201).json({
+            success: true,
+            message: 'Employee added successfully',
+            data: { employee_id: result.insertId }
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Database error' });
     }
 };
 

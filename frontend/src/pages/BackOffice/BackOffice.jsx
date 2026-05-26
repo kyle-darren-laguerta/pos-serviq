@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { MenuContext } from '../../context/MenuContext';
 import './BackOffice.css';
 
 // 1. DUMMY DATABASE: Simulating your 'Employee' and 'Role' tables
@@ -15,16 +16,33 @@ export default function BackOffice() {
   
   // State for tabs (Staff vs Roles vs Delivery) and employee data
   const [activeTab, setActiveTab] = useState('employees');
-  const [employees] = useState(initialEmployees);
+  const [employees, setEmployees] = useState(initialEmployees);
+  const [roles, setRoles] = useState([]);
+  const [fullName, setFullName] = useState('');
+  const [hireDate, setHireDate] = useState('');
+  const [contactNumber, setContactNumber] = useState('');
+  const [overtimeRate, setOvertimeRate] = useState('');
+  const [selectedRole, setSelectedRole] = useState('');
+  const [employeeError, setEmployeeError] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleOpenModal = () => setIsModalOpen(true);
+  const handleCloseModal = () => setIsModalOpen(false);
+
+  const modalTitle = activeTab === 'employees'
+    ? 'Add New Employee'
+    : activeTab === 'packages'
+      ? 'Create New Food Package'
+      : 'Add New Record';
   
   // Food Package states
   const [packageName, setPackageName] = useState('');
   const [packageDescription, setPackageDescription] = useState('');
   const [packagePrice, setPackagePrice] = useState('');
-  const [menuItems, setMenuItems] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
   const [foodPackages, setFoodPackages] = useState([]);
   const [error, setError] = useState(null);
+  const { menuItems } = useContext(MenuContext);
 
   const items = [{
     id: 3,
@@ -32,32 +50,85 @@ export default function BackOffice() {
     price: 50
   }];
 
-  // Fetch menu items on component mount
   useEffect(() => {
-    fetchMenuItems();
     fetchFoodPackages();
+    fetchEmployees();
+    fetchRoles();
   }, []);
 
-  const fetchMenuItems = async () => {
-    console.log("test1");
+  const fetchEmployees = async () => {
     try {
-      console.log("test2");
-      const response = await fetch('http://localhost:3000/menu/item');
+      const response = await fetch('http://localhost:3000/employee');
       const result = await response.json();
-      console.log("test3");
+
       if (response.ok && result.success) {
-        console.log("test4");
-        setMenuItems(result.data);
-        
-        setError(null);
-        console.log("test5");
+        setEmployees(result.data);
+        setEmployeeError(null);
       } else {
-        setError(result.message || 'Failed to fetch menu items');
+        setEmployeeError(result.message || 'Unable to load employees');
       }
     } catch (err) {
-      setError('Could not connect to the server.');
+      setEmployeeError('Could not connect to the server.');
     }
   };
+
+  const fetchRoles = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/employee/roles');
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setRoles(result.data);
+        if (result.data.length > 0) {
+          setSelectedRole(result.data[0].role_id);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load roles:', err);
+    }
+  };
+
+  const handleCreateEmployee = async (e) => {
+    e.preventDefault();
+    if (!fullName || !hireDate || !contactNumber || !overtimeRate || !selectedRole) {
+      setEmployeeError('Please fill in all employee fields.');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:3000/employee', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          full_name: fullName,
+          hire_date: hireDate,
+          contact_number: contactNumber,
+          overtime_rate: parseFloat(overtimeRate),
+          role_id: selectedRole
+        })
+      });
+
+      const result = await response.json();
+      if (response.ok && result.success) {
+        setFullName('');
+        setHireDate('');
+        setContactNumber('');
+        setOvertimeRate('');
+        setSelectedRole(roles.length > 0 ? roles[0].role_id : '');
+        setEmployeeError(null);
+        setIsModalOpen(false);
+        fetchEmployees();
+      } else {
+        setEmployeeError(result.message || 'Failed to add employee');
+      }
+    } catch (err) {
+      console.error('Failed to create employee:', err);
+      setEmployeeError('Could not connect to the server.');
+    }
+  };
+
 
   const fetchFoodPackages = async () => {
     try {
@@ -213,45 +284,45 @@ export default function BackOffice() {
             {activeTab === 'locations' && 'Delivery Zones'}
             {activeTab === 'packages' && 'Food Packages'}
           </h1>
-          <button className="add-new-btn">+ Add New Record</button>
+          <button className="add-new-btn" onClick={handleOpenModal}>+ Add New Record</button>
         </header>
 
         {/* Dynamic Content Based on Tab Selection */}
         <div className="dashboard-content">
           
           {activeTab === 'employees' ? (
-            <div className="table-wrapper">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Employee ID</th>
-                    <th>Full Name</th>
-                    <th>Assigned Role</th>
-                    <th>Salary Rate</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {employees.map((emp) => (
-                    <tr key={emp.id}>
-                      <td><span className="id-badge">{emp.id}</span></td>
-                      <td className="emp-name">{emp.name}</td>
-                      <td>{emp.role}</td>
-                      <td>{emp.salary}</td>
-                      <td>
-                        <span className={`status-badge ${emp.status === 'Active' ? 'active' : 'inactive'}`}>
-                          {emp.status}
-                        </span>
-                      </td>
-                      <td>
-                        <button className="edit-btn">Edit</button>
-                      </td>
+            <>
+              <div className="table-wrapper">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Employee ID</th>
+                      <th>Full Name</th>
+                      <th>Role</th>
+                      <th>Hire Date</th>
+                      <th>Contact</th>
+                      <th>Overtime Rate</th>
+                      <th>Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {employees.map((emp) => (
+                      <tr key={emp.employee_id || emp.id}>
+                        <td><span className="id-badge">{emp.employee_id || emp.id}</span></td>
+                        <td className="emp-name">{emp.full_name || emp.name}</td>
+                        <td>{emp.role_name || emp.role}</td>
+                        <td>{emp.hire_date || 'N/A'}</td>
+                        <td>{emp.contact_number || 'N/A'}</td>
+                        <td>₱{emp.overtime_rate ?? '0.00'}</td>
+                        <td>
+                          <button className="edit-btn">Edit</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           ) : activeTab === 'packages' ? (
             <div className="packages-container">
               {error && <div className="error-message">{error}</div>}
@@ -396,6 +467,102 @@ export default function BackOffice() {
           )}
 
         </div>
+
+        {isModalOpen && (
+          <div className="modal-overlay" onClick={handleCloseModal}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <div>
+                  <h2>{modalTitle}</h2>
+                  <p className="modal-subtitle">Fill in the fields below and save to add a new record.</p>
+                </div>
+                <button className="modal-close-btn" onClick={handleCloseModal}>&times;</button>
+              </div>
+
+              {activeTab === 'employees' ? (
+                <form onSubmit={handleCreateEmployee} className="modal-form">
+                  {employeeError && <div className="error-message">{employeeError}</div>}
+
+                  <div className="field-group">
+                    <label>Full Name</label>
+                    <input
+                      type="text"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      placeholder="Juan Dela Cruz"
+                      required
+                    />
+                  </div>
+
+                  <div className="field-group">
+                    <label>Hire Date</label>
+                    <input
+                      type="date"
+                      value={hireDate}
+                      onChange={(e) => setHireDate(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="field-group">
+                    <label>Contact Number</label>
+                    <input
+                      type="text"
+                      value={contactNumber}
+                      onChange={(e) => setContactNumber(e.target.value)}
+                      placeholder="09123456789"
+                      required
+                    />
+                  </div>
+
+                  <div className="field-group">
+                    <label>Overtime Rate</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={overtimeRate}
+                      onChange={(e) => setOvertimeRate(e.target.value)}
+                      placeholder="₱0.00"
+                      required
+                    />
+                  </div>
+
+                  <div className="field-group">
+                    <label>Role</label>
+                    <select
+                      value={selectedRole}
+                      onChange={(e) => setSelectedRole(e.target.value)}
+                      required
+                    >
+                      <option value="">Select a role</option>
+                      {roles.map((role) => (
+                        <option key={role.role_id} value={role.role_id}>
+                          {role.role_name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="modal-actions">
+                    <button type="button" className="cancel-btn" onClick={handleCloseModal}>
+                      Cancel
+                    </button>
+                    <button type="submit" className="save-btn">
+                      Add Employee
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="modal-placeholder">
+                  {activeTab === 'packages'
+                    ? 'Package creation is available in the package panel below.'
+                    : 'This tab does not support the modal add form yet.'}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

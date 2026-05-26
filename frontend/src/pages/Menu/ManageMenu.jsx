@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './ManageMenu.css';
+import { MenuContext } from '../../context/MenuContext';
 
 export default function ManageMenu() {
   const navigate = useNavigate();
@@ -15,8 +16,7 @@ export default function ManageMenu() {
   const [editAddonId, setEditAddonId] = useState(null);
   const [isEditAddonMode, setIsEditAddonMode] = useState(false);
 
-  const [menuItems, setMenuItems] = useState([]);
-  const [addons, setAddons] = useState([]);
+  const { menuItems, addons, fetchMenuItems, fetchAddons } = useContext(MenuContext);
   const [error, setError] = useState(null);
 
   const clearForm = () => {
@@ -33,41 +33,6 @@ export default function ManageMenu() {
     setIsEditAddonMode(false);
   };
 
-  const fetchMenuItems = async () => {
-    try {
-      const response = await fetch('http://localhost:3000/menu/item');
-      const result = await response.json();
-
-      if (response.ok && result.sucess) {
-        setMenuItems(result.data);
-        setError(null);
-      } else {
-        setError(result.message || 'Failed to fetch menu items');
-      }
-    } catch (err) {
-      setError('Could not connect to the server.');
-    }
-  };
-
-  const fetchAddons = async () => {
-    try {
-      const response = await fetch('http://localhost:3000/menu/addon');
-      const result = await response.json();
-
-      if (response.ok && result.sucess) {
-        setAddons(result.data);
-      } else {
-        console.warn(result.message || 'Failed to fetch addons');
-      }
-    } catch (err) {
-      console.warn('Could not fetch addons:', err);
-    }
-  };
-
-  useEffect(() => {
-    fetchMenuItems();
-    fetchAddons();
-  }, []);
 
   const handleEditItem = (item) => {
     setItemName(item.name);

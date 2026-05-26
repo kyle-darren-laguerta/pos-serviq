@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 // 1. IMPORT THE CLOUD
 import { OrderProvider } from './context/OrderContext';
 import { InventoryProvider } from './context/InventoryContext'; 
+import { MenuProvider } from './context/MenuContext';
 
 // Import your pages
 import POSScreen from "./pages/POSScreen/POSScreen"; 
@@ -19,7 +20,8 @@ function App() {
     // 2. WRAP YOUR ENTIRE APP IN THE CLOUD
     <OrderProvider> 
       <InventoryProvider>
-        <Router>
+        <MenuProvider>
+          <Router>
           <Routes>
             <Route path="/" element={<POSScreen />} />
             <Route path="/kds" element={<KitchenDisplay />} />
@@ -29,7 +31,8 @@ function App() {
             <Route path="/reservations" element={<Reservations />} />
             <Route path="/attendance" element={<Attendance />} />
           </Routes>
-        </Router>
+          </Router>
+        </MenuProvider>
       </InventoryProvider>
     </OrderProvider>
   );
