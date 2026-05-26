@@ -1,5 +1,4 @@
 #### TODO
-- Show the reservation created
 - Implement Attendance
 - Implement the Shift Management
 - Implement Order

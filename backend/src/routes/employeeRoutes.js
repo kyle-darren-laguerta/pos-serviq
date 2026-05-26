@@ -1,7 +1,9 @@
 import express from 'express';
-import { getAttendance, getEmployeeById, getEmployees, getEmployeeSalary } from '../controller/employeeControllers.js';
+import { getAttendance, getEmployeeById, getEmployees, getEmployeeSalary, punchAttendance } from '../controller/employeeControllers.js';
 
 const route = express.Router();
+
+route.post('/attendance', punchAttendance);
 
 route.get('/attendance', getAttendance);
 

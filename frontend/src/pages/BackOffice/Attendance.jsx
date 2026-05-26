@@ -8,6 +8,8 @@ export default function Attendance() {
   
   // ---> NEW STATE: Captures the Employee ID
   const [employeeId, setEmployeeId] = useState('');
+  const [attendanceLogs, setAttendanceLogs] = useState([]);
+  const [attendanceError, setAttendanceError] = useState(null);
 
   // Tick-tock: Update clock every second
   useEffect(() => {
@@ -15,19 +17,59 @@ export default function Attendance() {
     return () => clearInterval(timer);
   }, []);
 
-  const handlePunch = (type) => {
+  const fetchAttendanceLogs = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/employee/attendance');
+      const result = await response.json();
+      if (response.ok && result.success) {
+        setAttendanceLogs(result.data);
+        setAttendanceError(null);
+      } else {
+        setAttendanceLogs([]);
+        setAttendanceError(result.message || 'Unable to load attendance logs');
+      }
+    } catch (error) {
+      console.error('Attendance fetch failed:', error);
+      setAttendanceLogs([]);
+      setAttendanceError('Unable to connect to the server');
+    }
+  };
+
+  useEffect(() => {
+    fetchAttendanceLogs();
+  }, []);
+
+  const handlePunch = async (type) => {
     // ---> NEW LOGIC: Prevent blank submissions
     if (!employeeId.trim()) {
       alert("⚠️ Please enter your Employee ID first!");
       return;
     }
 
-    const timestamp = currentTime.toLocaleTimeString();
-    
-    // BACKEND HANDOFF: Darren will replace this with his MySQL INSERT
-    alert(`DevSync Note: Employee ID [${employeeId}] recorded ${type} at ${timestamp}. Handoff to Backend successful.`);
-    
-    // Clear the input field for the next person
+    try {
+      const response = await fetch('http://localhost:3000/employee/attendance', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          employee_id: employeeId,
+          type: type === 'IN' ? 'in' : 'out'
+        })
+      });
+
+      const result = await response.json();
+      if (response.ok && result.success) {
+        alert(`Employee ${employeeId} ${type === 'IN' ? 'timed in' : 'timed out'} successfully.`);
+        fetchAttendanceLogs();
+      } else {
+        alert(result.message || 'Unable to record attendance');
+      }
+    } catch (error) {
+      console.error('Attendance punch failed:', error);
+      alert('Unable to connect to the attendance API');
+    }
+
     setEmployeeId('');
   };
 
@@ -77,25 +119,33 @@ export default function Attendance() {
 
       <div className="log-section">
         <h3>Recent Logs</h3>
+        {attendanceError && <div className="error-message">{attendanceError}</div>}
         <table className="log-table">
           <thead>
             <tr>
               <th>Staff Member</th>
-              <th>Status</th>
-              <th>Timestamp</th>
+              <th>Employee ID</th>
+              <th>Time In</th>
+              <th>Time Out</th>
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td>Joeven Gatuteo</td>
-              <td><span style={{ color: '#10b981' }}>Shift Started</span></td>
-              <td>08:00 AM</td>
-            </tr>
-            <tr>
-              <td>Kyle Darren</td>
-              <td><span style={{ color: '#ef4444' }}>Shift Ended</span></td>
-              <td>05:00 PM</td>
-            </tr>
+            {attendanceLogs.length === 0 ? (
+              <tr>
+                <td colSpan="4" style={{ textAlign: 'center', padding: '18px 0' }}>
+                  No attendance logs available.
+                </td>
+              </tr>
+            ) : (
+              attendanceLogs.map((log) => (
+                <tr key={log.attendance_id}>
+                  <td>{log.full_name}</td>
+                  <td>{log.employee_id}</td>
+                  <td>{new Date(log.log_in_time).toLocaleString()}</td>
+                  <td>{log.log_out_time ? new Date(log.log_out_time).toLocaleString() : '—'}</td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

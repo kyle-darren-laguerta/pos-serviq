@@ -39,7 +39,7 @@ export const getAttendance = async (req, res) => {
     const { id, date } = req.query;
 
     let sql = `
-        SELECT e.employee_id, e.full_name, a.log_in_time, a.log_out_time
+        SELECT a.attendance_id, a.employee_id, e.full_name, a.log_in_time, a.log_out_time
         FROM attendance a
         JOIN employee e ON e.employee_id = a.employee_id
         WHERE 1=1
@@ -56,20 +56,78 @@ export const getAttendance = async (req, res) => {
         params.push(date);
     }
 
+    sql += " ORDER BY a.log_in_time DESC LIMIT 10";
+
     try {
         const [rows] = await db.query(sql, params);
 
-        if (rows.length === 0) {
-            return res.status(404).json({ message: "Employee not found" });
-        }
-
         res.json({
-            sucess: true,
+            success: true,
             data: rows
         });
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: "Database error" });
+    }
+}
+
+export const punchAttendance = async (req, res) => {
+    const { employee_id, type } = req.body;
+
+    if (!employee_id || !type) {
+        return res.status(400).json({
+            success: false,
+            message: "employee_id and type are required"
+        });
+    }
+
+    try {
+        if (type === 'in') {
+            const [result] = await db.query(
+                'INSERT INTO attendance (employee_id, log_in_time) VALUES (?, NOW())',
+                [employee_id]
+            );
+
+            return res.status(201).json({
+                success: true,
+                message: 'Time in recorded',
+                attendance_id: result.insertId
+            });
+        }
+
+        if (type === 'out') {
+            const [rows] = await db.query(
+                'SELECT attendance_id FROM attendance WHERE employee_id = ? AND log_out_time IS NULL ORDER BY log_in_time DESC LIMIT 1',
+                [employee_id]
+            );
+
+            if (rows.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'No active time in record found for this employee'
+                });
+            }
+
+            const attendanceId = rows[0].attendance_id;
+            await db.query(
+                'UPDATE attendance SET log_out_time = NOW() WHERE attendance_id = ?',
+                [attendanceId]
+            );
+
+            return res.status(200).json({
+                success: true,
+                message: 'Time out recorded',
+                attendance_id: attendanceId
+            });
+        }
+
+        return res.status(400).json({
+            success: false,
+            message: "Invalid type value. Use 'in' or 'out'."
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Database error' });
     }
 }
 
