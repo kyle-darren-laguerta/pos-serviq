@@ -193,8 +193,30 @@ export const getAddon = async (req, res) => {
     }
 }
 
+export const getMenuItemAddons = async (req, res) => {
+    const menuItemId = req.params.id;
+
+    try {
+        const [rows] = await db.query(
+            `SELECT a.addon_id, a.name, a.price
+             FROM addon a
+             JOIN menu_item_add_on m ON a.addon_id = m.addon_id
+             WHERE m.menu_item_id = ?`,
+            [menuItemId]
+        );
+
+        res.json({
+            success: true,
+            data: rows
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "Database error" });
+    }
+}
+
 export const addAddon = async (req, res) => {
-    const { name, price } = req.body;
+    const { name, price, menu_item_id } = req.body;
 
     if (!name || price === undefined) {
         return res.status(400).json({ success: false, message: 'Missing required fields: name, price' });
@@ -204,17 +226,78 @@ export const addAddon = async (req, res) => {
         return res.status(400).json({ success: false, message: 'Invalid price value' });
     }
 
+    const connection = await db.getConnection();
+
     try {
-        const [result] = await db.query("INSERT INTO addon (name, price) VALUES (?, ?)", [name, price]);
+        await connection.beginTransaction();
+
+        const [result] = await connection.query(
+            "INSERT INTO addon (name, price) VALUES (?, ?)",
+            [name, price]
+        );
+
+        const addonId = result.insertId;
+
+        if (menu_item_id !== undefined && menu_item_id !== null && menu_item_id !== '') {
+            const [menuRows] = await connection.query(
+                'SELECT menu_item_id FROM menu_item WHERE menu_item_id = ?',
+                [menu_item_id]
+            );
+
+            if (menuRows.length === 0) {
+                throw new Error('Menu item not found');
+            }
+
+            await connection.query(
+                'INSERT INTO menu_item_add_on (menu_item_id, addon_id) VALUES (?, ?)',
+                [menu_item_id, addonId]
+            );
+        }
+
+        await connection.commit();
 
         res.status(201).json({
             success: true,
             message: 'Addon added successfully',
-            data: { id: result.insertId }
+            data: { id: addonId }
         });
     } catch (error) {
+        if (connection) await connection.rollback();
         console.error(error);
-        res.status(500).json({ success: false, message: "Database error" });
+        res.status(500).json({ success: false, message: error.message || "Database error" });
+    } finally {
+        if (connection) connection.release();
+    }
+}
+
+export const assignAddonToMenuItem = async (req, res) => {
+    const menuItemId = req.params.id;
+    const { addon_id } = req.body;
+
+    if (!addon_id) {
+        return res.status(400).json({ success: false, message: 'Addon ID is required' });
+    }
+
+    try {
+        const [menuRows] = await db.query('SELECT menu_item_id FROM menu_item WHERE menu_item_id = ?', [menuItemId]);
+        if (menuRows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Menu item not found' });
+        }
+
+        const [addonRows] = await db.query('SELECT addon_id FROM addon WHERE addon_id = ?', [addon_id]);
+        if (addonRows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Addon not found' });
+        }
+
+        await db.query(
+            'INSERT INTO menu_item_add_on (menu_item_id, addon_id) VALUES (?, ?)',
+            [menuItemId, addon_id]
+        );
+
+        res.status(201).json({ success: true, message: 'Addon assigned to menu item successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Database error' });
     }
 }
 

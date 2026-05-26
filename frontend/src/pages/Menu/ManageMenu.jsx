@@ -17,6 +17,7 @@ export default function ManageMenu() {
 
   const [addonName, setAddonName] = useState('');
   const [addonPrice, setAddonPrice] = useState('');
+  const [addonMenuItemId, setAddonMenuItemId] = useState('');
   const [editAddonId, setEditAddonId] = useState(null);
   const [isEditAddonMode, setIsEditAddonMode] = useState(false);
 
@@ -53,6 +54,7 @@ export default function ManageMenu() {
   const clearAddonForm = () => {
     setAddonName('');
     setAddonPrice('');
+    setAddonMenuItemId('');
     setEditAddonId(null);
     setIsEditAddonMode(false);
   };
@@ -205,6 +207,7 @@ export default function ManageMenu() {
     const addonPayload = {
       name: addonName,
       price: parseFloat(addonPrice),
+      menu_item_id: addonMenuItemId ? parseInt(addonMenuItemId, 10) : undefined,
     };
 
     const isUpdating = isEditAddonMode && editAddonId;
@@ -414,6 +417,22 @@ export default function ManageMenu() {
                 step="0.01"
                 required
               />
+            </div>
+
+            <div>
+              <label>Applies To Menu Item</label>
+              <select
+                value={addonMenuItemId}
+                onChange={(e) => setAddonMenuItemId(e.target.value)}
+                required={!isEditAddonMode}
+              >
+                <option value="">Select menu item</option>
+                {menuItems.map((menuItem) => (
+                  <option key={menuItem.menu_item_id} value={menuItem.menu_item_id}>
+                    {menuItem.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="form-actions">

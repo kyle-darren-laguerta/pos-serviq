@@ -1,5 +1,5 @@
 import express from 'express';
-import { addAddon, addMenu, getAddon, getMenu, getRecipe, saveRecipe, updateAddon, updateMenuItem } from '../controller/menuControllers.js';
+import { addAddon, addMenu, assignAddonToMenuItem, getMenuItemAddons, getAddon, getMenu, getRecipe, saveRecipe, updateAddon, updateMenuItem } from '../controller/menuControllers.js';
 
 const route = express.Router();
 
@@ -32,6 +32,16 @@ route.get('/recipe/:id', getRecipe);
  * Status: Working
  */
 route.put('/recipe/:id', saveRecipe);
+
+/**
+ * Description: Get addon for a specific menu item
+ */
+route.get('/item/:id/addon', getMenuItemAddons);
+
+/**
+ * Description: Assign an existing addon to a menu item
+ */
+route.post('/item/:id/addon', assignAddonToMenuItem);
 
 /**
  * Description: Get all the addon
