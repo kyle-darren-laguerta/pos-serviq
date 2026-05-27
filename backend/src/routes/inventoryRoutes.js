@@ -1,5 +1,5 @@
 import express from 'express';
-import { addIngredient, addWasteItem, addSupplier, updateIngredient, getIngredients } from '../controller/inventoryControllers.js';
+import { addIngredient, addWasteItem, addSupplier, updateIngredient, getIngredients, getWasteItems } from '../controller/inventoryControllers.js';
 
 const route = express.Router();
 
@@ -27,6 +27,11 @@ route.post("/ingredient", addIngredient);
  * }
  */
 route.post("/waste", addWasteItem);
+
+/**
+ * Description: Get all waste items
+ */
+route.get("/waste", getWasteItems);
 
 /**
  * Description: Add supplier

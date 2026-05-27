@@ -19,7 +19,7 @@ export default function Attendance() {
 
   const fetchAttendanceLogs = async () => {
     try {
-      const response = await fetch('http://localhost:3000/employee/attendance');
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/employee/attendance`);
       const result = await response.json();
       if (response.ok && result.success) {
         setAttendanceLogs(result.data);
@@ -47,7 +47,7 @@ export default function Attendance() {
     }
 
     try {
-      const response = await fetch('http://localhost:3000/employee/attendance', {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/employee/attendance`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

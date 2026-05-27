@@ -58,7 +58,7 @@ export default function BackOffice() {
 
   const fetchEmployees = async () => {
     try {
-      const response = await fetch('http://localhost:3000/employee');
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/employee`);
       const result = await response.json();
 
       if (response.ok && result.success) {
@@ -74,7 +74,7 @@ export default function BackOffice() {
 
   const fetchRoles = async () => {
     try {
-      const response = await fetch('http://localhost:3000/employee/roles');
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/employee/roles`);
       const result = await response.json();
 
       if (response.ok && result.success) {
@@ -96,7 +96,7 @@ export default function BackOffice() {
     }
 
     try {
-      const response = await fetch('http://localhost:3000/employee', {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/employee`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -132,7 +132,7 @@ export default function BackOffice() {
 
   const fetchFoodPackages = async () => {
     try {
-      const response = await fetch('http://localhost:3000/food-package/');
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/food-package/`);
       const result = await response.json();
       console.log('Food Packages API Response:', response.status, result);
       if (response.ok && result.success) {
@@ -195,7 +195,7 @@ export default function BackOffice() {
       }))
     };
 
-    const response = await fetch('http://localhost:3000/food-package/', {
+    const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/food-package/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)

@@ -23,7 +23,7 @@ export default function Reservations() {
 
   const fetchReservations = async () => {
     try {
-      const response = await fetch('http://localhost:3000/order/reservation');
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/order/reservation`);
       const result = await response.json();
 
       if (response.ok && result.success) {
@@ -51,7 +51,7 @@ export default function Reservations() {
     // BACKEND HANDOFF NOTE FOR DARREN:
     // console.log("Sending to DB:", { customerName, contact, location, eventDate, packageSelected, downPayment, serviceFee, status });
 
-    fetch('http://localhost:3000/order/reservation', {
+    fetch(`${import.meta.env.VITE_BACKEND_URL}/order/reservation`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

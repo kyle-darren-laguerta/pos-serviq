@@ -12,7 +12,7 @@ export const MenuProvider = ({ children }) => {
   const fetchMenuItems = async () => {
     setIsLoadingMenu(true);
     try {
-      const response = await fetch('http://localhost:3000/menu/item');
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/menu/item`);
       const result = await response.json();
 
       if (response.ok && result.success) {
@@ -31,7 +31,7 @@ export const MenuProvider = ({ children }) => {
   const fetchAddons = async () => {
     setIsLoadingAddons(true);
     try {
-      const response = await fetch('http://localhost:3000/menu/addon');
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/menu/addon`);
       const result = await response.json();
 
       if (response.ok && result.success) {

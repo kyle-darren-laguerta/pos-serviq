@@ -27,7 +27,7 @@ export default function ManageMenu() {
   useEffect(() => {
     const fetchIngredients = async () => {
       try {
-        const response = await fetch('http://localhost:3000/inventory/ingredient');
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/inventory/ingredient`);
         const result = await response.json();
 
         if (response.ok && result.success) {
@@ -89,7 +89,7 @@ export default function ManageMenu() {
 
   const fetchRecipe = async (menuItemId) => {
     try {
-      const response = await fetch(`http://localhost:3000/menu/recipe/${menuItemId}`);
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/menu/recipe/${menuItemId}`);
       const result = await response.json();
 
       if (response.ok && result.success) {
@@ -138,8 +138,8 @@ export default function ManageMenu() {
 
     const isUpdating = isEditMode && editItemId;
     const menuUrl = isUpdating
-      ? `http://localhost:3000/menu/item/${editItemId}`
-      : 'http://localhost:3000/menu/item';
+      ? `${import.meta.env.VITE_BACKEND_URL}/menu/item/${editItemId}`
+      : `${import.meta.env.VITE_BACKEND_URL}/menu/item`;
 
     const filteredRecipe = recipeRows.filter(
       (row) => row.ingredient_id && row.quantity_required && row.unit_of_measure
@@ -147,7 +147,7 @@ export default function ManageMenu() {
 
     const saveRecipe = async (menuItemId) => {
       try {
-        const response = await fetch(`http://localhost:3000/menu/recipe/${menuItemId}`, {
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/menu/recipe/${menuItemId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ recipe: filteredRecipe })
@@ -212,8 +212,8 @@ export default function ManageMenu() {
 
     const isUpdating = isEditAddonMode && editAddonId;
     const url = isUpdating
-      ? `http://localhost:3000/menu/addon/${editAddonId}`
-      : 'http://localhost:3000/menu/addon';
+      ? `${import.meta.env.VITE_BACKEND_URL}/menu/addon/${editAddonId}`
+      : `${import.meta.env.VITE_BACKEND_URL}/menu/addon`;
 
     try {
       const response = await fetch(url, {

@@ -9,7 +9,7 @@ export const InventoryProvider = ({ children }) => {
 
   useEffect(() => {
     // 2. Wrap fetch in useEffect so it runs once
-    fetch('http://localhost:3000/food-package') // Note: check if it's http or https
+    fetch(`${import.meta.env.VITE_BACKEND_URL}/food-package`) // Note: check if it's http or https
       .then(response => {
         if (!response.ok) throw new Error('Network response was not ok');
         return response.json();

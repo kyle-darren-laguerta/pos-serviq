@@ -80,7 +80,7 @@ const POSScreen = () => {
     setSelectedMenuItemAddons([]);
 
     try {
-      const response = await fetch(`http://localhost:3000/menu/item/${menuItem.menu_item_id}/addon`);
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/menu/item/${menuItem.menu_item_id}/addon`);
       const result = await response.json();
 
       if (response.ok && result.success) {
@@ -189,7 +189,7 @@ const POSScreen = () => {
     };
 
     try {
-      const response = await fetch('http://localhost:3000/order/', {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/order/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderPayload)

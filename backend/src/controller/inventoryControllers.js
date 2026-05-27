@@ -65,20 +65,51 @@ export const addWasteItem = async (req, res) => {
         return res.status(400).json({ success: false, message: 'Invalid waste_date value' });
     }
 
+    const connection = await db.getConnection();
+
     try {
-        const [result] = await db.query(
+        await connection.beginTransaction();
+
+        const [ingredientRows] = await connection.query(
+            "SELECT current_stock FROM ingredient WHERE ingredient_id = ?",
+            [ingredient_id]
+        );
+
+        if (ingredientRows.length === 0) {
+            await connection.rollback();
+            return res.status(404).json({ success: false, message: 'Ingredient not found' });
+        }
+
+        const currentStock = Number(ingredientRows[0].current_stock);
+
+        if (currentStock < quantity) {
+            await connection.rollback();
+            return res.status(400).json({ success: false, message: 'Insufficient stock to record waste' });
+        }
+
+        const [result] = await connection.query(
             "INSERT INTO waste_item (quantity, reason_category, ingredient_id, waste_date) VALUES (?, ?, ?, ?)",
             [quantity, reason_category, ingredient_id, waste_date]
         );
 
+        await connection.query(
+            "UPDATE ingredient SET current_stock = ? WHERE ingredient_id = ?",
+            [currentStock - quantity, ingredient_id]
+        );
+
+        await connection.commit();
+
         res.status(201).json({
             success: true,
-            message: "Waste item inserted successfully",
+            message: "Waste item recorded successfully",
             data: { id: result.insertId }
         });
     } catch (error) {
+        await connection.rollback();
         console.error(error);
         res.status(500).json({ success: false, message: "Database error" });
+    } finally {
+        connection.release();
     }
 }
 
@@ -183,6 +214,29 @@ export const updateIngredient = async (req, res) => {
             id: ingredientId,
             updatedFields: req.body
         });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "Database error" });
+    }
+}
+
+export const getWasteItems = async (req, res) => {
+    const sql = `
+        SELECT w.waste_item_id,
+               w.quantity,
+               w.reason_category,
+               DATE_FORMAT(w.waste_date, '%Y-%m-%d') AS waste_date,
+               w.ingredient_id,
+               i.ingredient_name,
+               i.unit_of_measure
+        FROM waste_item w
+        JOIN ingredient i ON w.ingredient_id = i.ingredient_id
+        ORDER BY w.waste_date DESC, w.waste_item_id DESC;
+    `;
+
+    try {
+        const [rows] = await db.query(sql);
+        res.json({ success: true, data: rows });
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: "Database error" });

@@ -13,6 +13,10 @@ export default function Inventory() {
   const [currentStock, setCurrentStock] = useState('');
   const [editIngredientId, setEditIngredientId] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [wasteIngredientId, setWasteIngredientId] = useState(null);
+  const [wasteQuantity, setWasteQuantity] = useState('');
+  const [wasteReason, setWasteReason] = useState('');
+  const [wasteDate, setWasteDate] = useState(new Date().toISOString().split('T')[0]);
 
   // 1. Initialize the inventory state hook
   const [inventory, setInventory] = useState([]);
@@ -30,7 +34,7 @@ export default function Inventory() {
 
   const fetchIngredients = async () => {
     try {
-      const response = await fetch('http://localhost:3000/inventory/ingredient');
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/inventory/ingredient`);
       const result = await response.json();
 
       if (response.ok && result.success) {
@@ -39,13 +43,23 @@ export default function Inventory() {
       } else {
         setError(result.message || "Failed to fetch ingredients");
       }
-    } catch (err) {
+    } catch {
       setError("Could not connect to the server.");
     }
   };
 
   useEffect(() => {
-    fetchIngredients();
+    let active = true;
+
+    const loadIngredients = async () => {
+      if (!active) return;
+      await fetchIngredients();
+    };
+
+    loadIngredients();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const handleEditIngredient = (item) => {
@@ -71,8 +85,8 @@ export default function Inventory() {
 
     const isUpdating = isEditMode && editIngredientId;
     const url = isUpdating
-      ? `http://localhost:3000/inventory/ingredient/${editIngredientId}`
-      : 'http://localhost:3000/inventory/ingredient';
+      ? `${import.meta.env.VITE_BACKEND_URL}/inventory/ingredient/${editIngredientId}`
+      : `${import.meta.env.VITE_BACKEND_URL}/inventory/ingredient`;
 
     try {
       const response = await fetch(url, {
@@ -103,11 +117,67 @@ export default function Inventory() {
     }
   };
 
+  const openWasteForm = (item) => {
+    if (wasteIngredientId === item.ingredient_id) {
+      setWasteIngredientId(null);
+      return;
+    }
+
+    setWasteIngredientId(item.ingredient_id);
+    setWasteQuantity('');
+    setWasteReason('');
+    setWasteDate(new Date().toISOString().split('T')[0]);
+  };
+
+  const handleWasteSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!wasteIngredientId) {
+      return;
+    }
+
+    const wastePayload = {
+      ingredient_id: wasteIngredientId,
+      quantity: Number(wasteQuantity),
+      reason_category: wasteReason,
+      waste_date: wasteDate,
+    };
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/inventory/waste`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(wastePayload),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        alert('Waste item recorded successfully!');
+        setWasteIngredientId(null);
+        setWasteQuantity('');
+        setWasteReason('');
+        setWasteDate(new Date().toISOString().split('T')[0]);
+        await fetchIngredients();
+      } else {
+        alert(`Error: ${result.message || result.error || 'Unable to record waste.'}`);
+      }
+    } catch (error) {
+      console.error('Waste submission error:', error);
+      alert('Could not connect to the server.');
+    }
+  };
+
   return (
     <div className="inventory-container">
       
       <header className="inv-header">
         <h1>📦 ServiQ Stockroom</h1>
+        <button className="back-btn" onClick={() => navigate('/inventory/waste')}>
+          🗑️ Waste Records
+        </button>
         <button className="back-btn" onClick={() => navigate('/')}>
           ← Return to POS
         </button>
@@ -194,24 +264,83 @@ export default function Inventory() {
 
         <div className="current-stock-panel">
           <h3>📊 Current Stock Levels</h3>
+          {error && <div className="error-message">{error}</div>}
           <div style={{ marginTop: '20px' }}>
             {inventory.map((item) => (
-              <div key={item.ingredient_id} className="stock-item">
-                <div className="stock-details">
-                  <div className="stock-header">
-                    <span className="stock-name">{item.ingredient_name}</span>
-                    <span className="stock-unit">({item.unit_of_measure})</span>
+              <React.Fragment key={item.ingredient_id}>
+                <div className="stock-item">
+                  <div className="stock-details">
+                    <div className="stock-header">
+                      <span className="stock-name">{item.ingredient_name}</span>
+                      <span className="stock-unit">({item.unit_of_measure})</span>
+                    </div>
+                    <div className="stock-info-grid">
+                      <span className="info-label">Current: <span className={item.current_stock < item.minimum_stock_level ? 'low' : 'good'}>{item.current_stock}</span></span>
+                      <span className="info-label">Min: {item.minimum_stock_level}</span>
+                      <span className="info-label">Cost: ₱{item.cost_per_unit}</span>
+                    </div>
                   </div>
-                  <div className="stock-info-grid">
-                    <span className="info-label">Current: <span className={item.current_stock < item.minimum_stock_level ? 'low' : 'good'}>{item.current_stock}</span></span>
-                     <span className="info-label">Min: {item.minimum_stock_level}</span>
-                    <span className="info-label">Cost: ₱{item.cost_per_unit}</span>
+                  <div className="stock-actions">
+                    <button className="edit-btn" type="button" onClick={() => handleEditIngredient(item)}>
+                      Edit
+                    </button>
+                    <button className="record-btn" type="button" onClick={() => openWasteForm(item)}>
+                      {wasteIngredientId === item.ingredient_id ? 'Cancel Waste' : 'Record Waste'}
+                    </button>
                   </div>
                 </div>
-                <button className="edit-btn" type="button" onClick={() => handleEditIngredient(item)}>
-                  Edit
-                </button>
-              </div>
+                {wasteIngredientId === item.ingredient_id && (
+                  <form className="waste-entry-form" onSubmit={handleWasteSubmit}>
+                  <div className="waste-form-row">
+                    <div>
+                      <label>Waste Quantity</label>
+                      <input
+                        type="number"
+                        min="1"
+                        step="1"
+                        value={wasteQuantity}
+                        onChange={(e) => setWasteQuantity(e.target.value)}
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label>Reason</label>
+                      <input
+                        type="text"
+                        placeholder="e.g., Spoiled, Damaged, Expired"
+                        value={wasteReason}
+                        onChange={(e) => setWasteReason(e.target.value)}
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label>Waste Date</label>
+                      <input
+                        type="date"
+                        value={wasteDate}
+                        onChange={(e) => setWasteDate(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-actions waste-actions">
+                    <button type="submit" className="save-btn">
+                      Save Waste Record
+                    </button>
+                    <button
+                      type="button"
+                      className="cancel-btn"
+                      onClick={() => setWasteIngredientId(null)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
+              </React.Fragment>
             ))}
           </div>
         </div>
