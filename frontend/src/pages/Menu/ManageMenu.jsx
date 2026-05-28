@@ -120,6 +120,29 @@ export default function ManageMenu() {
     fetchRecipe(item.menu_item_id);
   };
 
+  const handleToggleAvailability = async (item) => {
+    const nextStatus = item.availability_status === 'Available' ? 'Unavailable' : 'Available';
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/menu/item/${item.menu_item_id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ availability_status: nextStatus })
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        alert(`Error: ${result.message || result.error || 'Unable to update availability.'}`);
+        return;
+      }
+
+      await fetchMenuItems();
+    } catch (error) {
+      console.error('Availability toggle failed:', error);
+      alert('Could not update menu item availability.');
+    }
+  };
+
   const handleEditAddon = (addon) => {
     setAddonName(addon.name);
     setAddonPrice(String(addon.price));
@@ -371,13 +394,22 @@ export default function ManageMenu() {
                       </span>
                     </div>
                   </div>
-                  <button
-                    className="edit-btn"
-                    type="button"
-                    onClick={() => handleEditItem(item)}
-                  >
-                    Edit
-                  </button>
+                  <div className="menu-item-actions">
+                    <button
+                      className="edit-btn"
+                      type="button"
+                      onClick={() => handleEditItem(item)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="toggle-btn"
+                      type="button"
+                      onClick={() => handleToggleAvailability(item)}
+                    >
+                      {item.availability_status === 'Available' ? 'Mark Unavailable' : 'Mark Available'}
+                    </button>
+                  </div>
                 </div>
               ))
             ) : (

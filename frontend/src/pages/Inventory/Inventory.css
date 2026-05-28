@@ -37,18 +37,24 @@
   display: flex;
   gap: 30px;
   align-items: flex-start;
+  flex-wrap: wrap;
 }
 
-.add-item-panel, .current-stock-panel {
+.add-item-panel, .current-stock-panel, .supplier-panel {
   background-color: #1e293b; /* Dark card background */
   padding: 20px;
   border-radius: 8px;
   border: 1px solid #334155;
 }
 
-.add-item-panel {
+.add-item-panel, .supplier-panel {
   flex: 1;
   min-width: 300px;
+}
+
+.current-stock-panel {
+  flex: 2;
+  min-width: 400px;
 }
 
 .current-stock-panel {

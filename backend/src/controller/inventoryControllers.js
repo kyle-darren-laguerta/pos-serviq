@@ -25,19 +25,57 @@ export const getIngredients = async (req, res) => {
 }
 
 export const addIngredient = async (req, res) => {
-    const { ingredient_name, unit_of_measure, minimum_stock_level, cost_per_unit, current_stock} = req.body;
+    const { ingredient_name, unit_of_measure, minimum_stock_level, cost_per_unit, current_stock, supplier_id, date_supplied } = req.body;
+
+    const connection = await db.getConnection();
 
     try {
-        const [result] = await db.query("INSERT INTO ingredient (ingredient_name, unit_of_measure, minimum_stock_level, cost_per_unit, current_stock) VALUES (?, ?, ?, ?, ?)", [ingredient_name, unit_of_measure, minimum_stock_level, cost_per_unit, current_stock]);
+        await connection.beginTransaction();
+
+        const [result] = await connection.query(
+            "INSERT INTO ingredient (ingredient_name, unit_of_measure, minimum_stock_level, cost_per_unit, current_stock) VALUES (?, ?, ?, ?, ?)",
+            [ingredient_name, unit_of_measure, minimum_stock_level, cost_per_unit, current_stock]
+        );
+
+        const ingredientId = result.insertId;
+
+        if (supplier_id !== undefined && supplier_id !== null && supplier_id !== '') {
+            if (typeof supplier_id !== 'number' || supplier_id <= 0) {
+                await connection.rollback();
+                return res.status(400).json({ success: false, message: 'Invalid supplier_id value' });
+            }
+
+            const [supplierRows] = await connection.query(
+                "SELECT supplier_id FROM supplier WHERE supplier_id = ?",
+                [supplier_id]
+            );
+
+            if (supplierRows.length === 0) {
+                await connection.rollback();
+                return res.status(404).json({ success: false, message: 'Supplier not found' });
+            }
+
+            const supplyDate = date_supplied || new Date().toISOString().slice(0, 10);
+
+            await connection.query(
+                "INSERT INTO supplier_ingredient (supplier_id, ingredient_id, date_supplied, quantity, supplied_price) VALUES (?, ?, ?, ?, ?)",
+                [supplier_id, ingredientId, supplyDate, current_stock, cost_per_unit]
+            );
+        }
+
+        await connection.commit();
 
         res.status(201).json({
             success: true,
             message: "Ingredient data inserted successfully",
-            data: { id: result.insertId }
+            data: { id: ingredientId }
         });
     } catch (error) {
+        await connection.rollback();
         console.error(error);
         res.status(500).json({ success: false, message: "Database error" });
+    } finally {
+        connection.release();
     }
 }
 
@@ -146,6 +184,128 @@ export const addSupplier = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: "Database error" });
+    }
+}
+
+export const getSuppliers = async (req, res) => {
+    const sql = `
+        SELECT supplier_id, supplier_name, contact_number, supplier_address
+        FROM supplier
+        ORDER BY supplier_name ASC;
+    `;
+
+    try {
+        const [rows] = await db.query(sql);
+        res.json({ success: true, data: rows });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "Database error" });
+    }
+}
+
+export const getSupplierIngredients = async (req, res) => {
+    const sql = `
+        SELECT
+            si.supplier_id,
+            s.supplier_name,
+            si.ingredient_id,
+            i.ingredient_name,
+            DATE_FORMAT(si.date_supplied, '%Y-%m-%d') AS date_supplied,
+            si.quantity,
+            si.supplied_price
+        FROM supplier_ingredient si
+        JOIN supplier s ON si.supplier_id = s.supplier_id
+        LEFT JOIN ingredient i ON si.ingredient_id = i.ingredient_id
+        ORDER BY si.date_supplied DESC, si.supplier_id ASC;
+    `;
+
+    try {
+        const [rows] = await db.query(sql);
+        res.json({ success: true, data: rows });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "Database error" });
+    }
+}
+
+export const addSupplierIngredient = async (req, res) => {
+    const { supplier_id, ingredient_id, quantity, supplied_price, date_supplied } = req.body;
+
+    if (supplier_id === undefined || ingredient_id === undefined || quantity === undefined || supplied_price === undefined || date_supplied === undefined) {
+        return res.status(400).json({ success: false, message: 'Missing required fields: supplier_id, ingredient_id, quantity, supplied_price, date_supplied' });
+    }
+
+    if (typeof supplier_id !== 'number' || supplier_id <= 0) {
+        return res.status(400).json({ success: false, message: 'Invalid supplier_id value' });
+    }
+
+    if (typeof ingredient_id !== 'number' || ingredient_id <= 0) {
+        return res.status(400).json({ success: false, message: 'Invalid ingredient_id value' });
+    }
+
+    if (typeof quantity !== 'number' || quantity <= 0) {
+        return res.status(400).json({ success: false, message: 'Invalid quantity value' });
+    }
+
+    if (typeof supplied_price !== 'number' || supplied_price < 0) {
+        return res.status(400).json({ success: false, message: 'Invalid supplied_price value' });
+    }
+
+    const parsedDate = new Date(date_supplied);
+    if (isNaN(parsedDate.getTime())) {
+        return res.status(400).json({ success: false, message: 'Invalid date_supplied value' });
+    }
+
+    const connection = await db.getConnection();
+
+    try {
+        await connection.beginTransaction();
+
+        const [supplierRows] = await connection.query(
+            "SELECT supplier_id FROM supplier WHERE supplier_id = ?",
+            [supplier_id]
+        );
+
+        if (supplierRows.length === 0) {
+            await connection.rollback();
+            return res.status(404).json({ success: false, message: 'Supplier not found' });
+        }
+
+        const [ingredientRows] = await connection.query(
+            "SELECT current_stock FROM ingredient WHERE ingredient_id = ?",
+            [ingredient_id]
+        );
+
+        if (ingredientRows.length === 0) {
+            await connection.rollback();
+            return res.status(404).json({ success: false, message: 'Ingredient not found' });
+        }
+
+        const currentStock = Number(ingredientRows[0].current_stock);
+
+        const [result] = await connection.query(
+            "INSERT INTO supplier_ingredient (supplier_id, ingredient_id, date_supplied, quantity, supplied_price) VALUES (?, ?, ?, ?, ?)",
+            [supplier_id, ingredient_id, date_supplied, quantity, supplied_price]
+        );
+
+        await connection.query(
+            "UPDATE ingredient SET current_stock = ? WHERE ingredient_id = ?",
+            [currentStock + quantity, ingredient_id]
+        );
+
+        await connection.commit();
+
+        res.status(201).json({
+            success: true,
+            message: "Supplier ingredient record added successfully",
+            data: { supplier_id, ingredient_id }
+        });
+    } catch (error) {
+        await connection.rollback();
+        console.error(error);
+        res.status(500).json({ success: false, message: "Database error" });
+    } finally {
+        connection.release();
     }
 }
 

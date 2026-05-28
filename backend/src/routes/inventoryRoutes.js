@@ -1,5 +1,5 @@
 import express from 'express';
-import { addIngredient, addWasteItem, addSupplier, updateIngredient, getIngredients, getWasteItems } from '../controller/inventoryControllers.js';
+import { addIngredient, addWasteItem, addSupplier, addSupplierIngredient, getSuppliers, getSupplierIngredients, updateIngredient, getIngredients, getWasteItems } from '../controller/inventoryControllers.js';
 
 const route = express.Router();
 
@@ -43,7 +43,10 @@ route.get("/waste", getWasteItems);
  *   supplier_address: "123 Market St"
  * }
  */
+route.get("/supplier", getSuppliers);
+route.get("/supplier-ingredient", getSupplierIngredients);
 route.post("/supplier", addSupplier);
+route.post("/supplier-ingredient", addSupplierIngredient);
 
 /**
  * Description: Update ingredient attributes by ID

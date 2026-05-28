@@ -162,9 +162,16 @@ const POSScreen = () => {
 
   const displayItems =
     activeCategory === 'Addon' ? addons : activeCategory === 'Packages' ? packages : menuItems;
-  const filteredItems = displayItems.filter((item) =>
-    (item.name ?? item.package_name).toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredItems = displayItems.filter((item) => {
+    const label = (item.name ?? item.package_name).toLowerCase();
+    const matchesSearch = label.includes(searchQuery.toLowerCase());
+
+    if (displayItems === menuItems) {
+      return matchesSearch && item.availability_status === 'Available';
+    }
+
+    return matchesSearch;
+  });
 
   const handleSubmitOrder = async () => {
     if (cart.length === 0) return;

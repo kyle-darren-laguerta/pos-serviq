@@ -49,7 +49,7 @@ export const updateMenuItem = async (req, res) => {
     const { name, price, availability_status } = req.body;
 
     // 1. Ensure at least one field is provided
-    if (!name && price === undefined) {
+    if (name === undefined && price === undefined && availability_status === undefined) {
         return res.status(400).json({ error: 'No fields provided for update' });
     }
 
