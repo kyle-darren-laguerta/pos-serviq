@@ -317,6 +317,79 @@ export const createReceipt = async (req, res) => {
     }
 };
 
+export const createReservationReceipt = async (req, res) => {
+    const reservationID = Number(req.params.id);
+    if (!reservationID || isNaN(reservationID)) {
+        return res.status(400).json({ success: false, error: 'Invalid or missing reservation id' });
+    }
+
+    const connection = await db.getConnection();
+
+    try {
+        await connection.beginTransaction();
+
+        const [reservationRows] = await connection.query(
+            'SELECT reservation_id, status, down_payment, service_fee FROM reservation WHERE reservation_id = ?',
+            [reservationID]
+        );
+
+        if (!reservationRows.length) {
+            throw new Error('Reservation not found');
+        }
+
+        const reservation = reservationRows[0];
+        if (reservation.status?.toLowerCase() !== 'completed') {
+            return res.status(400).json({
+                success: false,
+                error: 'Receipt may only be created for a completed reservation'
+            });
+        }
+
+        const [existingReceiptRows] = await connection.query(
+            'SELECT reservation_receipt_id FROM reservation_receipt WHERE reservation_id = ?',
+            [reservationID]
+        );
+
+        if (existingReceiptRows.length) {
+            return res.status(409).json({
+                success: false,
+                error: 'A receipt already exists for this reservation'
+            });
+        }
+
+        const [packageRows] = await connection.query(
+            `SELECT COALESCE(SUM(rp.quantity * fp.total_price), 0) AS package_total
+             FROM reservation_package rp
+             JOIN food_package fp ON fp.package_id = rp.package_id
+             WHERE rp.reservation_id = ?`,
+            [reservationID]
+        );
+
+        const packageTotal = parseFloat(packageRows[0]?.package_total ?? 0) || 0;
+        const serviceFee = parseFloat(reservation.service_fee ?? 0) || 0;
+        const totalAmount = packageTotal + serviceFee;
+
+        const [receiptResult] = await connection.query(
+            'INSERT INTO reservation_receipt (reservation_id, amount, date) VALUES (?, ?, CURDATE())',
+            [reservationID, totalAmount]
+        );
+
+        await connection.commit();
+        res.status(201).json({
+            success: true,
+            reservation_id: reservationID,
+            receipt_id: receiptResult.insertId,
+            total: totalAmount
+        });
+    } catch (error) {
+        await connection.rollback();
+        console.error('Reservation receipt creation failed:', error);
+        res.status(500).json({ success: false, error: 'Database error occurred' });
+    } finally {
+        connection.release();
+    }
+};
+
 export const getReservations = async (req, res) => {
     try {
         const [reservations] = await db.query(`

@@ -1,23 +1,25 @@
 import db from '../config/db.js';
 
-export const getRevenue = async (reg, res) => {
-    let sql = `
-        SELECT SUM(amount) AS monthly_revenue
-        FROM receipt
-        WHERE date BETWEEN DATE_SUB(CURDATE(), INTERVAL 22 DAY) AND CURDATE()
-    `;
-    const params = [];
+export const getRevenue = async (req, res) => {
+    const { startDate, endDate } = req.params;
+    let sql = `CALL GetRevenueByInterval(?, ?)`;
+    const params = [startDate, endDate];
+
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
+        return res.status(400).json({ success: false, message: "Invalid date format. Use YYYY-MM-DD" });
+    }
+
+    if (new Date(startDate) > new Date(endDate)) {
+        return res.status(400).json({ success: false, message: "start_date cannot be after end_date" });
+    }
 
     try {
-        const [rows] = await db.query(sql, params);
-
-        if (rows.length === 0) {
-            return res.status(404).json({ message: "There is no revenue" });
-        }
+        const [result] = await db.query(sql, params);
 
         res.json({
-            sucess: true,
-            data: rows
+            success: true,
+            data: result[0]
         });
     } catch (error) {
         console.error(error);

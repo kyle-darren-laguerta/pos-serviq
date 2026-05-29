@@ -3,6 +3,6 @@ import { getRevenue } from '../controller/financeController.js';
 
 const route = express.Router();
 
-route.get('/revenue', getRevenue);
+route.get('/revenue/:startDate/:endDate', getRevenue);
 
 export default route;

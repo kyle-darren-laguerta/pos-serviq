@@ -26,6 +26,16 @@ export default function BackOffice() {
   const [employeeError, setEmployeeError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const [revenueStartDate, setRevenueStartDate] = useState(() => {
+    const start = new Date();
+    start.setDate(start.getDate() - 30);
+    return start.toISOString().slice(0, 10);
+  });
+  const [revenueEndDate, setRevenueEndDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [revenueData, setRevenueData] = useState([]);
+  const [revenueError, setRevenueError] = useState(null);
+  const [isRevenueLoading, setIsRevenueLoading] = useState(false);
+
   const handleOpenModal = () => setIsModalOpen(true);
   const handleCloseModal = () => setIsModalOpen(false);
 
@@ -44,17 +54,17 @@ export default function BackOffice() {
   const [error, setError] = useState(null);
   const { menuItems } = useContext(MenuContext);
 
-  const items = [{
-    id: 3,
-    name: "Kewpie",
-    price: 50
-  }];
-
   useEffect(() => {
     fetchFoodPackages();
     fetchEmployees();
     fetchRoles();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'reports') {
+      fetchRevenueReport();
+    }
+  }, [activeTab]);
 
   const fetchEmployees = async () => {
     try {
@@ -147,6 +157,36 @@ export default function BackOffice() {
       console.error('Food packages fetch exception:', err);
       setError('Could not connect to the server. Make sure the backend is running.');
     }
+  };
+
+  const fetchRevenueReport = async () => {
+    setIsRevenueLoading(true);
+    setRevenueError(null);
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/finance/revenue/${revenueStartDate}/${revenueEndDate}`
+      );
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setRevenueData(Array.isArray(result.data) ? result.data : []);
+      } else {
+        setRevenueData([]);
+        setRevenueError(result.message || 'Unable to load revenue report.');
+      }
+    } catch (err) {
+      console.error('Revenue report fetch failed:', err);
+      setRevenueData([]);
+      setRevenueError('Could not connect to the server.');
+    } finally {
+      setIsRevenueLoading(false);
+    }
+  };
+
+  const handleRevenueFilterSubmit = (e) => {
+    e.preventDefault();
+    fetchRevenueReport();
   };
 
   const handleAddMenuItem = () => {
@@ -267,6 +307,12 @@ export default function BackOffice() {
           >
             📦 Food Packages
           </button>
+          <button 
+            className={`sidebar-btn ${activeTab === 'reports' ? 'active' : ''}`}
+            onClick={() => setActiveTab('reports')}
+          >
+            📊 Reports
+          </button>
         </nav>
 
         {/* Escape Hatch back to Screen 1 */}
@@ -283,8 +329,11 @@ export default function BackOffice() {
             {activeTab === 'roles' && 'Roles & Wages'}
             {activeTab === 'locations' && 'Delivery Zones'}
             {activeTab === 'packages' && 'Food Packages'}
+            {activeTab === 'reports' && 'Reports'}
           </h1>
-          <button className="add-new-btn" onClick={handleOpenModal}>+ Add New Record</button>
+          {activeTab !== 'reports' && (
+            <button className="add-new-btn" onClick={handleOpenModal}>+ Add New Record</button>
+          )}
         </header>
 
         {/* Dynamic Content Based on Tab Selection */}
@@ -457,6 +506,99 @@ export default function BackOffice() {
                     </div>
                   )}
                 </div>
+              </div>
+            </div>
+          ) : activeTab === 'reports' ? (
+            <div className="reports-container">
+              <div className="report-section">
+                <div className="report-section-header">
+                  <div>
+                    <h2>Revenue Report</h2>
+                    <p>Review revenue by interval for completed financial performance.</p>
+                  </div>
+                  <form className="report-filters" onSubmit={handleRevenueFilterSubmit}>
+                    <div className="filter-group">
+                      <label>Start Date</label>
+                      <input
+                        type="date"
+                        value={revenueStartDate}
+                        onChange={(e) => setRevenueStartDate(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="filter-group">
+                      <label>End Date</label>
+                      <input
+                        type="date"
+                        value={revenueEndDate}
+                        onChange={(e) => setRevenueEndDate(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <button type="submit" className="filter-btn">
+                      Update
+                    </button>
+                  </form>
+                </div>
+
+                {revenueError && <div className="error-message">{revenueError}</div>}
+
+                <div className="revenue-summary-grid">
+                  <div className="report-card">
+                    <span>Total Rows</span>
+                    <strong>{revenueData.length}</strong>
+                  </div>
+                  <div className="report-card">
+                    <span>Interval</span>
+                    <strong>{revenueStartDate} → {revenueEndDate}</strong>
+                  </div>
+                  <div className="report-card">
+                    <span>Status</span>
+                    <strong>{isRevenueLoading ? 'Loading...' : 'Ready'}</strong>
+                  </div>
+                </div>
+
+                <div className="report-table-wrapper">
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        {revenueData.length > 0 ? (
+                          Object.keys(revenueData[0]).map((field) => (
+                            <th key={field}>{field.replace(/_/g, ' ')}</th>
+                          ))
+                        ) : (
+                          <th>No data available</th>
+                        )}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {isRevenueLoading ? (
+                        <tr>
+                          <td colSpan={revenueData[0] ? Object.keys(revenueData[0]).length : 1}>
+                            Loading revenue...
+                          </td>
+                        </tr>
+                      ) : revenueData.length > 0 ? (
+                        revenueData.map((row, index) => (
+                          <tr key={index}>
+                            {Object.values(row).map((value, index2) => (
+                              <td key={index2}>{value ?? '-'}</td>
+                            ))}
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={1}>No revenue data found for the selected interval.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="report-section report-section-secondary">
+                <h3>Other Report Sections</h3>
+                <p>This area is reserved for future reports and analytics cards.</p>
               </div>
             </div>
           ) : (

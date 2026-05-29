@@ -190,13 +190,120 @@
   gap: 20px;
 }
 
-.error-message {
-  background-color: #7f1d1d;
-  color: #fee2e2;
-  padding: 15px;
-  border-radius: 8px;
-  border-left: 4px solid #ef4444;
-  margin-bottom: 20px;
+ .reports-container {
+   display: flex;
+   flex-direction: column;
+   gap: 24px;
+ }
+ 
+ .report-section {
+   background-color: #111827;
+   border: 1px solid #334155;
+   border-radius: 16px;
+   padding: 24px;
+ }
+ 
+ .report-section-secondary {
+   min-height: 220px;
+ }
+ 
+ .report-section-header {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 20px;
+   justify-content: space-between;
+   align-items: flex-start;
+   margin-bottom: 20px;
+ }
+ 
+ .report-section-header h2 {
+   margin: 0 0 10px;
+   color: #f8fafc;
+ }
+ 
+ .report-section-header p {
+   margin: 0;
+   color: #cbd5e1;
+ }
+ 
+ .report-filters {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 16px;
+   align-items: flex-end;
+ }
+ 
+ .report-filters .filter-group {
+   display: flex;
+   flex-direction: column;
+   gap: 6px;
+ }
+ 
+ .report-filters label {
+   color: #cbd5e1;
+   font-size: 0.9rem;
+   font-weight: 600;
+ }
+ 
+ .report-filters input {
+   min-width: 180px;
+   padding: 10px 12px;
+   border-radius: 8px;
+   border: 1px solid #475569;
+   background-color: #0f172a;
+   color: #e2e8f0;
+ }
+ 
+ .filter-btn {
+   padding: 12px 22px;
+   background-color: #2563eb;
+   color: white;
+   border: none;
+   border-radius: 10px;
+   cursor: pointer;
+   font-weight: 700;
+ }
+ 
+ .filter-btn:hover {
+   background-color: #1d4ed8;
+ }
+ 
+ .revenue-summary-grid {
+   display: grid;
+   grid-template-columns: repeat(3, minmax(180px, 1fr));
+   gap: 16px;
+   margin-bottom: 20px;
+ }
+ 
+ .report-card {
+   background-color: #0f172a;
+   border: 1px solid #334155;
+   border-radius: 14px;
+   padding: 18px;
+ }
+ 
+ .report-card span {
+   display: block;
+   color: #94a3b8;
+   font-size: 0.88rem;
+   margin-bottom: 8px;
+ }
+ 
+ .report-card strong {
+   display: block;
+   color: #f8fafc;
+   font-size: 1.2rem;
+ }
+ 
+ .report-table-wrapper {
+   overflow-x: auto;
+ }
+ 
+ .report-table-wrapper .data-table th,
+ .report-table-wrapper .data-table td {
+   min-width: 140px;
+ }
+ 
 }
 
 .packages-grid {

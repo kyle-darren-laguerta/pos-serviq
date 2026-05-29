@@ -110,6 +110,18 @@ export default function Reservations() {
         return;
       }
 
+      if (newStatus === 'Completed') {
+        const receiptResponse = await fetch(`${import.meta.env.VITE_BACKEND_URL}/order/reservation/${reservationId}/receipt`, {
+          method: 'POST'
+        });
+
+        const receiptResult = await receiptResponse.json();
+        if (!receiptResponse.ok) {
+          console.error('Reservation receipt creation failed:', receiptResult);
+          alert(receiptResult.error || 'Reservation was completed, but receipt creation failed.');
+        }
+      }
+
       fetchReservations();
     } catch (error) {
       console.error('Reservation status update failed:', error);
