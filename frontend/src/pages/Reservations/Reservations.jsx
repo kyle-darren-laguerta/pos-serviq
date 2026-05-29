@@ -89,6 +89,36 @@ export default function Reservations() {
     setStatus('Pending');
   };
 
+  const handleUpdateReservationStatus = async (reservationId, newStatus) => {
+    if (newStatus === 'Completed') {
+      const confirmed = window.confirm('Are you sure you want to mark this reservation as completed? Completed reservations will be hidden from the list.');
+      if (!confirmed) {
+        return;
+      }
+    }
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/order/reservation/${reservationId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        alert(result.error || 'Unable to update reservation status.');
+        return;
+      }
+
+      fetchReservations();
+    } catch (error) {
+      console.error('Reservation status update failed:', error);
+      alert('Unable to update reservation status.');
+    }
+  };
+
+  const visibleReservations = reservations.filter((reservation) => reservation.status?.toLowerCase() !== 'completed');
+
   // Mock Data for UI presentation
   const mockBookings = [
     { id: 1, name: 'Kyle Laguerta', date: '2026-05-10', package: 'Barkada Package' },
@@ -155,7 +185,10 @@ export default function Reservations() {
                 <select value={status} onChange={(e) => setStatus(e.target.value)}>
                   <option value="Pending">Pending</option>
                   <option value="Confirmed">Confirmed</option>
+                  <option value="fully_paid">Fully Paid</option>
+                  <option value="Completed">Completed</option>
                   <option value="Cancelled">Cancelled</option>
+                  <option value="no_show">No Show</option>
                 </select>
               </div>
             </div>
@@ -185,17 +218,31 @@ export default function Reservations() {
           <h3>📋 Upcoming Events & Bookings</h3>
           <div style={{ marginTop: '20px' }}>
             {reservationError && <div className="error-message">{reservationError}</div>}
-            {reservations.length === 0 && !reservationError ? (
+            {visibleReservations.length === 0 && !reservationError ? (
               <p className="empty-list">No reservations found.</p>
             ) : (
-              reservations.map((reservation) => (
+              visibleReservations.map((reservation) => (
                 <div key={reservation.reservation_id} className="booking-card">
                   <div className="booking-info">
                     <h4>{reservation.customer_name || 'Guest'}</h4>
                     <p className="booking-details">Location: {reservation.location}</p>
-                    <p className="booking-details">Status: {reservation.status}</p>
                     <p className="booking-details">Down Payment: ₱{reservation.down_payment ?? '0.00'}</p>
                     <p className="booking-details">Service Fee: ₱{reservation.service_fee ?? '0.00'}</p>
+                    <div style={{ margin: '10px 0' }}>
+                      <label style={{ display: 'block', fontSize: '14px', marginBottom: '6px' }}>Reservation Status</label>
+                      <select
+                        value={reservation.status}
+                        onChange={(e) => handleUpdateReservationStatus(reservation.reservation_id, e.target.value)}
+                        style={{ padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', width: '100%' }}
+                      >
+                        <option value="Pending">Pending</option>
+                        <option value="Confirmed">Confirmed</option>
+                        <option value="fully_paid">Fully Paid</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Cancelled">Cancelled</option>
+                        <option value="no_show">No Show</option>
+                      </select>
+                    </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div className="booking-date">{reservation.reservation_date?.split('T')[0] || reservation.reservation_date}</div>

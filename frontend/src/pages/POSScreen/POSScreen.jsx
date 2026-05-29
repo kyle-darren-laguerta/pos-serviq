@@ -84,7 +84,7 @@ const POSScreen = () => {
       const result = await response.json();
 
       if (response.ok && result.success) {
-        setSelectedMenuItemAddons(result.data);
+        setSelectedMenuItemAddons(result.data.filter((addon) => addon.status === 'Available'));
       } else {
         setSelectedMenuItemAddons([]);
       }

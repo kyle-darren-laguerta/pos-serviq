@@ -151,6 +151,29 @@ export default function ManageMenu() {
     clearForm();
   };
 
+  const handleToggleAddonStatus = async (addon) => {
+    const nextStatus = addon.status === 'Available' ? 'Unavailable' : 'Available';
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/menu/addon/${addon.addon_id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: nextStatus })
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        alert(`Error: ${result.message || result.error || 'Unable to update addon status.'}`);
+        return;
+      }
+
+      await fetchAddons();
+    } catch (error) {
+      console.error('Addon status toggle failed:', error);
+      alert('Could not update addon status.');
+    }
+  };
+
   const handleSaveMenuItem = async (e) => {
     e.preventDefault();
 
@@ -494,15 +517,27 @@ export default function ManageMenu() {
                       <span className="price">
                         ₱{parseFloat(addon.price).toFixed(2)}
                       </span>
+                      <span className={`status ${addon.status === 'Available' ? 'available' : 'unavailable'}`}>
+                        {addon.status || 'Available'}
+                      </span>
                     </div>
                   </div>
-                  <button
-                    className="edit-btn"
-                    type="button"
-                    onClick={() => handleEditAddon(addon)}
-                  >
-                    Edit
-                  </button>
+                  <div className="addon-actions">
+                    <button
+                      className="edit-btn"
+                      type="button"
+                      onClick={() => handleEditAddon(addon)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="toggle-btn"
+                      type="button"
+                      onClick={() => handleToggleAddonStatus(addon)}
+                    >
+                      {addon.status === 'Available' ? 'Mark Unavailable' : 'Mark Available'}
+                    </button>
+                  </div>
                 </div>
               ))
             ) : (

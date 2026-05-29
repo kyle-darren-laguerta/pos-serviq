@@ -171,7 +171,7 @@ export const saveRecipe = async (req, res) => {
 
 export const getAddon = async (req, res) => {
     let sql = `
-        SELECT addon_id, name, price
+        SELECT addon_id, name, price, status
         FROM addon;
     `;
     const params = [];
@@ -198,10 +198,10 @@ export const getMenuItemAddons = async (req, res) => {
 
     try {
         const [rows] = await db.query(
-            `SELECT a.addon_id, a.name, a.price
+            `SELECT a.addon_id, a.name, a.price, a.status
              FROM addon a
              JOIN menu_item_add_on m ON a.addon_id = m.addon_id
-             WHERE m.menu_item_id = ?`,
+             WHERE m.menu_item_id = ? AND a.status = 'Available'`,
             [menuItemId]
         );
 
@@ -216,7 +216,7 @@ export const getMenuItemAddons = async (req, res) => {
 }
 
 export const addAddon = async (req, res) => {
-    const { name, price, menu_item_id } = req.body;
+    const { name, price, menu_item_id, status } = req.body;
 
     if (!name || price === undefined) {
         return res.status(400).json({ success: false, message: 'Missing required fields: name, price' });
@@ -231,9 +231,10 @@ export const addAddon = async (req, res) => {
     try {
         await connection.beginTransaction();
 
+        const addonStatus = status ?? 'Available';
         const [result] = await connection.query(
-            "INSERT INTO addon (name, price) VALUES (?, ?)",
-            [name, price]
+            "INSERT INTO addon (name, price, status) VALUES (?, ?, ?)",
+            [name, price, addonStatus]
         );
 
         const addonId = result.insertId;
@@ -303,10 +304,10 @@ export const assignAddonToMenuItem = async (req, res) => {
 
 export const updateAddon = async (req, res) => {
     const addonId = req.params.id;
-    const { name, price } = req.body;
+    const { name, price, status } = req.body;
 
     // 1. Check if at least one field was sent in the request
-    if (!name && price === undefined) {
+    if (name === undefined && price === undefined && status === undefined) {
         return res.status(400).json({ error: 'No fields provided for update' });
     }
 
@@ -326,6 +327,14 @@ export const updateAddon = async (req, res) => {
         }
         updates.push("price = ?");
         params.push(price);
+    }
+
+    if (status !== undefined) {
+        if (typeof status !== 'string' || !['Available', 'Unavailable'].includes(status)) {
+            return res.status(400).json({ error: 'Invalid status value' });
+        }
+        updates.push("status = ?");
+        params.push(status);
     }
 
     // Add the ID for the WHERE clause
