@@ -15,6 +15,7 @@ route.post('/', createBulkOrder); // Under development
  * Status: Working
  */
 route.post('/receipt', createReceipt);
+route.post('/receipt/:orderID', createReceipt);
 
 // Add Reservation
 /**

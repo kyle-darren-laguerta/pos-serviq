@@ -9,6 +9,43 @@ export default function KitchenDisplay() {
   // THE CONNECTION: Pulling the live data AND the bump function from the cloud!
   const { orders, updateOrderStatus } = useContext(OrderContext);
 
+  const handleOrderAction = async (order) => {
+    if (order.status === 'Ready') {
+      let orderID = null;
+      if (order.order_id !== undefined && order.order_id !== null) {
+        orderID = Number(order.order_id);
+      } else if (typeof order.id === 'number') {
+        orderID = order.id;
+      } else if (typeof order.id === 'string') {
+        const digits = order.id.replace(/\D/g, '');
+        orderID = digits ? Number(digits) : null;
+      }
+
+      if (!orderID) {
+        console.warn('Cannot create receipt: order ID is not numeric', order);
+      } else {
+        try {
+          const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/order/receipt/${orderID}`, {
+            method: 'POST',
+          });
+
+          const result = await response.json();
+          if (!response.ok) {
+            console.error('Receipt creation failed:', result);
+            alert(result.error || 'Unable to create receipt for this ticket.');
+            return;
+          }
+        } catch (error) {
+          console.error('Receipt creation error:', error);
+          alert('Unable to create receipt for this ticket.');
+          return;
+        }
+      }
+    }
+
+    updateOrderStatus(order.id, order.status);
+  };
+
   return (
     <div className="kds-container">
       {/* KDS Header */}
@@ -66,7 +103,7 @@ export default function KitchenDisplay() {
               {/* Dynamic Bump Button uses the Cloud Function now */}
               <button 
                 className="bump-btn"
-                onClick={() => updateOrderStatus(order.id, order.status)}
+                onClick={() => handleOrderAction(order)}
               >
                 {order.status === 'Pending' && 'Start Preparing (Bump)'}
                 {order.status === 'Preparing' && 'Mark as Ready (Bump)'}

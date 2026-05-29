@@ -9,9 +9,10 @@ export const OrderProvider = ({ children }) => {
   const [orders, setOrders] = useState([]); 
 
   // Function to add a new order (Used by the POS)
-  const addOrder = (cartItems, total, tableNum = 'Takeout') => {
+  const addOrder = (cartItems, total, tableNum = 'Takeout', dbOrderId = null) => {
     const newOrder = {
-      id: `ORD-${new Date().getTime().toString().slice(-4)}`, // Generate random ID
+      id: dbOrderId ?? `ORD-${new Date().getTime().toString().slice(-4)}`,
+      order_id: dbOrderId ?? null,
       table: tableNum,
       status: 'Pending', // All new orders start as Yellow/Pending
       

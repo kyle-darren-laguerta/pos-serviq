@@ -245,7 +245,7 @@ export const createBulkOrder = async (req, res) => {
         }
 
         await connection.commit();
-        res.status(201).json({ success: true, message: "Order placed successfully" });
+        res.status(201).json({ success: true, message: "Order placed successfully", order_id: generatedOrderId });
 
     } catch (error) {
         await connection.rollback();
@@ -257,17 +257,26 @@ export const createBulkOrder = async (req, res) => {
 };
 
 export const createReceipt = async (req, res) => {
-    const { orderID } = req.query;
+    const orderID = req.params.orderID;
+    const parsedOrderID = Number(orderID);
+
+    if (!parsedOrderID || isNaN(parsedOrderID)) {
+        return res.status(400).json({ success: false, error: 'Invalid or missing orderID' });
+    }
 
     const connection = await db.getConnection();
 
     try {
         await connection.beginTransaction();
 
-        await connection.query(
+        const [updateResult] = await connection.query(
             'UPDATE order_table SET status = ? WHERE order_id = ?', 
-            ["Paid", orderID]
+            ["Paid", parsedOrderID]
         );
+
+        if (updateResult.affectedRows === 0) {
+            throw new Error('Order not found');
+        }
 
         const [orderAmount] = await connection.query(`
             SELECT SUM(l.quantity * m.price) AS order_amount
@@ -292,7 +301,7 @@ export const createReceipt = async (req, res) => {
 
         const [receiptResult] = await connection.query(
             'INSERT INTO receipt (order_id, amount, date) VALUES (?, ?, CURDATE())', 
-            [orderID, grandTotal]
+            [parsedOrderID, grandTotal]
         );
 
         await connection.commit();

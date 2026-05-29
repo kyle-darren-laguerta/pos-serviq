@@ -160,8 +160,7 @@ const POSScreen = () => {
     return sum + itemTotal + addonTotal;
   }, 0);
 
-  const displayItems =
-    activeCategory === 'Addon' ? addons : activeCategory === 'Packages' ? packages : menuItems;
+  const displayItems = activeCategory === 'Addon' ? addons : activeCategory === 'Packages' ? packages : menuItems;
   const filteredItems = displayItems.filter((item) => {
     const label = (item.name ?? item.package_name).toLowerCase();
     const matchesSearch = label.includes(searchQuery.toLowerCase());
@@ -204,7 +203,7 @@ const POSScreen = () => {
       const result = await response.json();
 
       if (response.ok && result.success) {
-        addOrder(cart, totalPrice, 'Table 1');
+        addOrder(cart, totalPrice, 'Table 1', result.order_id);
         setCart([]);
         setStatusMessage('Order submitted successfully.');
       } else {
