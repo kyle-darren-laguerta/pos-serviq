@@ -299,9 +299,21 @@ export const createReceipt = async (req, res) => {
         const addonTotal = addonAmount[0].addon_amount ?? 0;
         const grandTotal = parseFloat(orderTotal) + parseFloat(addonTotal);
 
+        // Calculate ingredient cost for this order
+        // Sum of (quantity_required * ingredient.unit_cost * ordered_quantity) across all ingredients used
+        const [ingredientCostRows] = await connection.query(`
+            SELECT COALESCE(SUM(r.quantity_required * i.cost_per_unit * l.quantity), 0) AS ingredient_cost
+            FROM line_item l
+            JOIN recipe r ON r.menu_item_id = l.menu_item_id
+            JOIN ingredient i ON i.ingredient_id = r.ingredient_id
+            WHERE l.order_id = ?
+        `, [parsedOrderID]);
+
+        const ingredientCost = parseFloat(ingredientCostRows[0].ingredient_cost ?? 0) || 0;
+
         const [receiptResult] = await connection.query(
-            'INSERT INTO receipt (order_id, amount, date) VALUES (?, ?, CURDATE())', 
-            [parsedOrderID, grandTotal]
+            'INSERT INTO receipt (order_id, amount, ingredient_cost, date) VALUES (?, ?, ?, CURDATE())', 
+            [parsedOrderID, grandTotal, ingredientCost]
         );
 
         await connection.commit();
