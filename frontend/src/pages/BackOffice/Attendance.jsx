@@ -127,12 +127,14 @@ export default function Attendance() {
               <th>Employee ID</th>
               <th>Time In</th>
               <th>Time Out</th>
+              <th>Total Hours</th>
+              <th>Overtime Hours</th>
             </tr>
           </thead>
           <tbody>
             {attendanceLogs.length === 0 ? (
               <tr>
-                <td colSpan="4" style={{ textAlign: 'center', padding: '18px 0' }}>
+                <td colSpan="6" style={{ textAlign: 'center', padding: '18px 0' }}>
                   No attendance logs available.
                 </td>
               </tr>
@@ -143,6 +145,8 @@ export default function Attendance() {
                   <td>{log.employee_id}</td>
                   <td>{new Date(log.log_in_time).toLocaleString()}</td>
                   <td>{log.log_out_time ? new Date(log.log_out_time).toLocaleString() : '—'}</td>
+                  <td>{log.total_hour != null ? log.total_hour : '—'}</td>
+                  <td>{log.overtime_hour != null ? log.overtime_hour : '—'}</td>
                 </tr>
               ))
             )}

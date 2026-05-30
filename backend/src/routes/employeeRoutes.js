@@ -1,11 +1,13 @@
 import express from 'express';
-import { getAttendance, getEmployeeById, getEmployees, getEmployeeSalary, punchAttendance, createEmployee, getRoles } from '../controller/employeeControllers.js';
+import { getAttendance, getEmployeeById, getEmployees, getEmployeeSalary, punchAttendance, createEmployee, getRoles, getAttendanceReport } from '../controller/employeeControllers.js';
 
 const route = express.Router();
 
 route.post('/attendance', punchAttendance);
  
 route.get('/attendance', getAttendance);
+
+route.get('/attendance-report/:startDate/:endDate', getAttendanceReport);
 
 // Get the employee roles in the database
 route.get('/roles', getRoles);

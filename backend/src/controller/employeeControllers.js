@@ -90,7 +90,7 @@ export const getAttendance = async (req, res) => {
     const { id, date } = req.query;
 
     let sql = `
-        SELECT a.attendance_id, a.employee_id, e.full_name, a.log_in_time, a.log_out_time
+        SELECT a.attendance_id, a.employee_id, e.full_name, a.log_in_time, a.log_out_time, a.total_hour, a.overtime_hour
         FROM attendance a
         JOIN employee e ON e.employee_id = a.employee_id
         WHERE 1=1
@@ -161,14 +161,25 @@ export const punchAttendance = async (req, res) => {
 
             const attendanceId = rows[0].attendance_id;
             await db.query(
-                'UPDATE attendance SET log_out_time = NOW() WHERE attendance_id = ?',
+                `UPDATE attendance
+                 SET log_out_time = NOW(),
+                     total_hour = TIMESTAMPDIFF(HOUR, log_in_time, NOW()),
+                     overtime_hour = GREATEST(TIMESTAMPDIFF(HOUR, log_in_time, NOW()) - 8, 0)
+                 WHERE attendance_id = ?`,
+                [attendanceId]
+            );
+
+            const [updated] = await db.query(
+                'SELECT total_hour, overtime_hour FROM attendance WHERE attendance_id = ?',
                 [attendanceId]
             );
 
             return res.status(200).json({
                 success: true,
                 message: 'Time out recorded',
-                attendance_id: attendanceId
+                attendance_id: attendanceId,
+                total_hour: updated[0]?.total_hour ?? null,
+                overtime_hour: updated[0]?.overtime_hour ?? null
             });
         }
 
@@ -179,6 +190,33 @@ export const punchAttendance = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: 'Database error' });
+    }
+}
+
+export const getAttendanceReport = async (req, res) => {
+    const { startDate, endDate } = req.params;
+    let sql = `CALL CalculateExpectedSalary(?, ?)`;
+    const params = [startDate, endDate];
+
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
+        return res.status(400).json({ success: false, message: "Invalid date format. Use YYYY-MM-DD" });
+    }
+
+    if (new Date(startDate) > new Date(endDate)) {
+        return res.status(400).json({ success: false, message: "start_date cannot be after end_date" });
+    }
+
+    try {
+        const [result] = await db.query(sql, params);
+
+        res.json({
+            success: true,
+            data: result[0]
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "Database error" });
     }
 }
 

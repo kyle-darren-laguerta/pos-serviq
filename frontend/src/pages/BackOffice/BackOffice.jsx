@@ -35,6 +35,24 @@ export default function BackOffice() {
   const [revenueData, setRevenueData] = useState([]);
   const [revenueError, setRevenueError] = useState(null);
   const [isRevenueLoading, setIsRevenueLoading] = useState(false);
+  const [expensesStartDate, setExpensesStartDate] = useState(() => {
+    const start = new Date();
+    start.setDate(start.getDate() - 30);
+    return start.toISOString().slice(0, 10);
+  });
+  const [expensesEndDate, setExpensesEndDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [expensesData, setExpensesData] = useState([]);
+  const [expensesError, setExpensesError] = useState(null);
+  const [isExpensesLoading, setIsExpensesLoading] = useState(false);
+  const [attendanceStartDate, setAttendanceStartDate] = useState(() => {
+    const start = new Date();
+    start.setDate(start.getDate() - 30);
+    return start.toISOString().slice(0, 10);
+  });
+  const [attendanceEndDate, setAttendanceEndDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [attendanceData, setAttendanceData] = useState([]);
+  const [attendanceError, setAttendanceError] = useState(null);
+  const [isAttendanceLoading, setIsAttendanceLoading] = useState(false);
 
   const handleOpenModal = () => setIsModalOpen(true);
   const handleCloseModal = () => setIsModalOpen(false);
@@ -188,6 +206,68 @@ export default function BackOffice() {
     e.preventDefault();
     fetchRevenueReport();
   };
+
+  const fetchExpensesReport = async () => {
+    setIsExpensesLoading(true);
+    setExpensesError(null);
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/finance/expenses/${revenueStartDate}/${revenueEndDate}`
+      );
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setExpensesData(Array.isArray(result.data) ? result.data : []);
+      } else {
+        setExpensesData([]);
+        setExpensesError(result.message || 'Unable to load revenue report.');
+      }
+    } catch (err) {
+      console.error('Revenue report fetch failed:', err);
+      setExpensesData([]);
+      setExpensesError('Could not connect to the server.');
+    } finally {
+      setIsExpensesLoading(false);
+    }
+  };
+
+  const handleExpensesFilterSubmit = (e) => {
+    e.preventDefault();
+    fetchExpensesReport();
+  };
+
+  const fetchAttendanceReport = async () => {
+    setIsAttendanceLoading(true);
+    setAttendanceError(null);
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/employee/attendance-report/${attendanceStartDate}/${attendanceEndDate}`
+      );
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setAttendanceData(Array.isArray(result.data) ? result.data : []);
+      } else {
+        setAttendanceData([]);
+        setAttendanceError(result.message || 'Unable to load attendance report.');
+      }
+    } catch (err) {
+      console.error('Attendance report fetch failed:', err);
+      setAttendanceData([]);
+      setAttendanceError('Could not connect to the server.');
+    } finally {
+      setIsAttendanceLoading(false);
+    }
+  };
+
+  const handleAttendanceFilterSubmit = (e) => {
+    e.preventDefault();
+    fetchAttendanceReport();
+  };
+
+
 
   const handleAddMenuItem = () => {
     setSelectedItems([...selectedItems, { menu_item_id: '', quantity: 1 }]);
@@ -596,9 +676,176 @@ export default function BackOffice() {
                 </div>
               </div>
 
-              <div className="report-section report-section-secondary">
-                <h3>Other Report Sections</h3>
-                <p>This area is reserved for future reports and analytics cards.</p>
+              <div className="report-section">
+                <div className="report-section-header">
+                  <div>
+                    <h2>Expenses Report</h2>
+                    <p>Review revenue by interval for completed financial performance.</p>
+                  </div>
+                  <form className="report-filters" onSubmit={handleRevenueFilterSubmit}>
+                    <div className="filter-group">
+                      <label>Start Date</label>
+                      <input
+                        type="date"
+                        value={expensesStartDate}
+                        onChange={(e) => setExpensesStartDate(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="filter-group">
+                      <label>End Date</label>
+                      <input
+                        type="date"
+                        value={expensesEndDate}
+                        onChange={(e) => setExpensesEndDate(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <button type="submit" className="filter-btn">
+                      Update
+                    </button>
+                  </form>
+                </div>
+
+                {revenueError && <div className="error-message">{revenueError}</div>}
+
+                <div className="revenue-summary-grid">
+                  <div className="report-card">
+                    <span>Total Rows</span>
+                    <strong>{revenueData.length}</strong>
+                  </div>
+                  <div className="report-card">
+                    <span>Interval</span>
+                    <strong>{expensesStartDate} → {expensesEndDate}</strong>
+                  </div>
+                  <div className="report-card">
+                    <span>Status</span>
+                    <strong>{isRevenueLoading ? 'Loading...' : 'Ready'}</strong>
+                  </div>
+                </div>
+
+                <div className="report-table-wrapper">
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        {revenueData.length > 0 ? (
+                          Object.keys(revenueData[0]).map((field) => (
+                            <th key={field}>{field.replace(/_/g, ' ')}</th>
+                          ))
+                        ) : (
+                          <th>No data available</th>
+                        )}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {isRevenueLoading ? (
+                        <tr>
+                          <td colSpan={revenueData[0] ? Object.keys(revenueData[0]).length : 1}>
+                            Loading revenue...
+                          </td>
+                        </tr>
+                      ) : revenueData.length > 0 ? (
+                        revenueData.map((row, index) => (
+                          <tr key={index}>
+                            {Object.values(row).map((value, index2) => (
+                              <td key={index2}>{value ?? '-'}</td>
+                            ))}
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={1}>No revenue data found for the selected interval.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="report-section">
+                <div className="report-section-header">
+                  <div>
+                    <h2>Employee Attendance Records</h2>
+                    <p>Review staff attendance and hours worked by date range.</p>
+                  </div>
+                  <form className="report-filters" onSubmit={handleAttendanceFilterSubmit}>
+                    <div className="filter-group">
+                      <label>Start Date</label>
+                      <input
+                        type="date"
+                        value={attendanceStartDate}
+                        onChange={(e) => setAttendanceStartDate(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="filter-group">
+                      <label>End Date</label>
+                      <input
+                        type="date"
+                        value={attendanceEndDate}
+                        onChange={(e) => setAttendanceEndDate(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <button type="submit" className="filter-btn">
+                      Update
+                    </button>
+                  </form>
+                </div>
+
+                {attendanceError && <div className="error-message">{attendanceError}</div>}
+
+                <div className="revenue-summary-grid">
+                  <div className="report-card">
+                    <span>Total Records</span>
+                    <strong>{attendanceData.length}</strong>
+                  </div>
+                  <div className="report-card">
+                    <span>Interval</span>
+                    <strong>{attendanceStartDate} → {attendanceEndDate}</strong>
+                  </div>
+                  <div className="report-card">
+                    <span>Status</span>
+                    <strong>{isAttendanceLoading ? 'Loading...' : 'Ready'}</strong>
+                  </div>
+                </div>
+
+                <div className="report-table-wrapper">
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        {attendanceData.length > 0 ? (
+                          Object.keys(attendanceData[0]).map((field) => (
+                            <th key={field}>{field.replace(/_/g, ' ')}</th>
+                          ))
+                        ) : (
+                          <th>No data available</th>
+                        )}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {isAttendanceLoading ? (
+                        <tr>
+                          <td colSpan={attendanceData[0] ? Object.keys(attendanceData[0]).length : 1}>
+                            Loading attendance records...
+                          </td>
+                        </tr>
+                      ) : attendanceData.length > 0 ? (
+                        attendanceData.map((row, index) => (
+                          <tr key={index}>
+                            {Object.values(row).map((value, index2) => (
+                              <td key={index2}>{value ?? '-'}</td>
+                            ))}
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={1}>No attendance records found for the selected interval.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           ) : (
