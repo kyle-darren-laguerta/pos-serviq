@@ -109,7 +109,7 @@ export const addWasteItem = async (req, res) => {
         await connection.beginTransaction();
 
         const [ingredientRows] = await connection.query(
-            "SELECT current_stock FROM ingredient WHERE ingredient_id = ?",
+            "SELECT current_stock, cost_per_unit FROM ingredient WHERE ingredient_id = ?",
             [ingredient_id]
         );
 
@@ -119,6 +119,7 @@ export const addWasteItem = async (req, res) => {
         }
 
         const currentStock = Number(ingredientRows[0].current_stock);
+        const cost_per_unit = Number(ingredientRows[0].cost_per_unit);
 
         if (currentStock < quantity) {
             await connection.rollback();
@@ -126,8 +127,8 @@ export const addWasteItem = async (req, res) => {
         }
 
         const [result] = await connection.query(
-            "INSERT INTO waste_item (quantity, reason_category, ingredient_id, waste_date) VALUES (?, ?, ?, ?)",
-            [quantity, reason_category, ingredient_id, waste_date]
+            "INSERT INTO waste_item (quantity, reason_category, ingredient_id, waste_date, total_cost) VALUES (?, ?, ?, ?, ?)",
+            [quantity, reason_category, ingredient_id, waste_date, quantity*cost_per_unit]
         );
 
         await connection.query(
@@ -387,6 +388,7 @@ export const getWasteItems = async (req, res) => {
                w.reason_category,
                DATE_FORMAT(w.waste_date, '%Y-%m-%d') AS waste_date,
                w.ingredient_id,
+               w.total_cost,
                i.ingredient_name,
                i.unit_of_measure
         FROM waste_item w

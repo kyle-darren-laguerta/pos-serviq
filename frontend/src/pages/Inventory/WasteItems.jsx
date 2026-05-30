@@ -76,6 +76,7 @@ export default function WasteItems() {
                     <span className="info-label">Quantity: {item.quantity}</span>
                     <span className="info-label">Reason: {item.reason_category}</span>
                     <span className="info-label">Date: {item.waste_date}</span>
+                    <span className="info-label">Total Cost: {item.total_cost}</span>
                   </div>
                 </div>
               </div>
