@@ -216,7 +216,7 @@ export const getMenuItemAddons = async (req, res) => {
 }
 
 export const addAddon = async (req, res) => {
-    const { name, price, menu_item_id, status } = req.body;
+    const { name, price, menu_item_id, menu_item_ids, status } = req.body;
 
     if (!name || price === undefined) {
         return res.status(400).json({ success: false, message: 'Missing required fields: name, price' });
@@ -239,10 +239,21 @@ export const addAddon = async (req, res) => {
 
         const addonId = result.insertId;
 
-        if (menu_item_id !== undefined && menu_item_id !== null && menu_item_id !== '') {
+        const menuItemIds = Array.isArray(menu_item_ids)
+            ? menu_item_ids
+            : menu_item_id !== undefined && menu_item_id !== null && menu_item_id !== ''
+                ? [menu_item_id]
+                : [];
+
+        for (const rawMenuItemId of menuItemIds) {
+            const parsedMenuItemId = parseInt(rawMenuItemId, 10);
+            if (Number.isNaN(parsedMenuItemId)) {
+                throw new Error('Invalid menu item id');
+            }
+
             const [menuRows] = await connection.query(
                 'SELECT menu_item_id FROM menu_item WHERE menu_item_id = ?',
-                [menu_item_id]
+                [parsedMenuItemId]
             );
 
             if (menuRows.length === 0) {
@@ -251,7 +262,7 @@ export const addAddon = async (req, res) => {
 
             await connection.query(
                 'INSERT INTO menu_item_add_on (menu_item_id, addon_id) VALUES (?, ?)',
-                [menu_item_id, addonId]
+                [parsedMenuItemId, addonId]
             );
         }
 

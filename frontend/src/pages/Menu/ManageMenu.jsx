@@ -17,7 +17,7 @@ export default function ManageMenu() {
 
   const [addonName, setAddonName] = useState('');
   const [addonPrice, setAddonPrice] = useState('');
-  const [addonMenuItemId, setAddonMenuItemId] = useState('');
+  const [addonMenuItemIds, setAddonMenuItemIds] = useState([]);
   const [editAddonId, setEditAddonId] = useState(null);
   const [isEditAddonMode, setIsEditAddonMode] = useState(false);
 
@@ -54,7 +54,7 @@ export default function ManageMenu() {
   const clearAddonForm = () => {
     setAddonName('');
     setAddonPrice('');
-    setAddonMenuItemId('');
+    setAddonMenuItemIds([]);
     setEditAddonId(null);
     setIsEditAddonMode(false);
   };
@@ -148,6 +148,7 @@ export default function ManageMenu() {
     setAddonPrice(String(addon.price));
     setEditAddonId(addon.addon_id);
     setIsEditAddonMode(true);
+    setAddonMenuItemIds([]);
     clearForm();
   };
 
@@ -250,10 +251,14 @@ export default function ManageMenu() {
   const handleSaveAddon = async (e) => {
     e.preventDefault();
 
+    const selectedMenuItemIds = addonMenuItemIds
+      .map((id) => parseInt(id, 10))
+      .filter((id) => !Number.isNaN(id));
+
     const addonPayload = {
       name: addonName,
       price: parseFloat(addonPrice),
-      menu_item_id: addonMenuItemId ? parseInt(addonMenuItemId, 10) : undefined,
+      menu_item_ids: selectedMenuItemIds.length > 0 ? selectedMenuItemIds : undefined,
     };
 
     const isUpdating = isEditAddonMode && editAddonId;
@@ -480,19 +485,25 @@ export default function ManageMenu() {
             </div>
 
             <div>
-              <label>Applies To Menu Item</label>
+              <label>Applies To Menu Items</label>
               <select
-                value={addonMenuItemId}
-                onChange={(e) => setAddonMenuItemId(e.target.value)}
+                multiple
+                size={Math.min(6, menuItems.length || 6)}
+                value={addonMenuItemIds}
+                onChange={(e) =>
+                  setAddonMenuItemIds(Array.from(e.target.selectedOptions, (option) => option.value))
+                }
                 required={!isEditAddonMode}
               >
-                <option value="">Select menu item</option>
                 {menuItems.map((menuItem) => (
                   <option key={menuItem.menu_item_id} value={menuItem.menu_item_id}>
                     {menuItem.name}
                   </option>
                 ))}
               </select>
+              <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>
+                Hold Ctrl (Windows) or Command (Mac) to select multiple menu items.
+              </p>
             </div>
 
             <div className="form-actions">
