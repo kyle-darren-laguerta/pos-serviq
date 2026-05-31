@@ -374,8 +374,13 @@ export default function ManageMenu() {
                     />
                   </div>
 
-                  <button type="button" className="remove-btn" onClick={() => handleRemoveRecipeRow(index)}>
-                    Remove
+                  <button
+                    type="button"
+                    className="remove-btn"
+                    onClick={() => handleRemoveRecipeRow(index)}
+                    aria-label="Remove recipe ingredient row"
+                  >
+                    ×
                   </button>
                 </div>
               ))}
@@ -412,7 +417,7 @@ export default function ManageMenu() {
                       <span className={`price ${item.availability_status === 'Available' ? 'available' : 'unavailable'}`}>
                         ₱{parseFloat(item.price).toFixed(2)}
                       </span>
-                      <span className="status">
+                      <span className={`status ${item.availability_status === 'Available' ? 'available' : 'unavailable'}`}>
                         {item.availability_status || 'Available'}
                       </span>
                     </div>

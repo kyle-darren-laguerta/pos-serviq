@@ -445,8 +445,9 @@ export default function Inventory() {
 
           <form onSubmit={handleSaveSupplier} className="supplier-form">
             <div>
-              <label>Supplier Name</label>
+              <label className="label">Supplier Name</label>
               <input
+                className="input-style"
                 type="text"
                 placeholder="e.g., Fresh Farms"
                 value={supplierName}
@@ -455,8 +456,9 @@ export default function Inventory() {
               />
             </div>
             <div>
-              <label>Contact Number</label>
+              <label className="label">Contact Number</label>
               <input
+                className="input-style"
                 type="text"
                 placeholder="e.g., 0917 123 4567"
                 value={supplierContact}
@@ -465,8 +467,9 @@ export default function Inventory() {
               />
             </div>
             <div>
-              <label>Address</label>
+              <label className="label">Address</label>
               <input
+                className="input-style"
                 type="text"
                 placeholder="e.g., 123 Market St"
                 value={supplierAddress}
@@ -554,14 +557,14 @@ export default function Inventory() {
                     <button className="record-btn" type="button" onClick={() => openWasteForm(item)}>
                       {wasteIngredientId === item.ingredient_id ? 'Cancel Waste' : 'Record Waste'}
                     </button>
-                    <button className="record-btn" type="button" onClick={() => openSupplyForm(item)}>
+                    <button className="supply-btn" type="button" onClick={() => openSupplyForm(item)}>
                       {supplyIngredientId === item.ingredient_id ? 'Cancel Supply' : 'Supply'}
                     </button>
                   </div>
                 </div>
                 {supplyIngredientId === item.ingredient_id && (
-                  <form className="waste-entry-form" onSubmit={handleSupplySubmit}>
-                    <div className="waste-form-row">
+                  <form className="supply-entry-form" onSubmit={handleSupplySubmit}>
+                    <div className="supply-form-row">
                       <div>
                         <label>Supply Quantity</label>
                         <input
@@ -601,10 +604,11 @@ export default function Inventory() {
                       </div>
                     </div>
 
-                    <div className="waste-form-row" style={{ marginTop: '12px' }}>
+                    <div className="supply-form-row" style={{ marginTop: '12px' }}>
                       <div>
                         <label>Price per Unit</label>
                         <input
+                          style={{ width: '25%' }}
                           type="number"
                           min="0"
                           step="0.01"

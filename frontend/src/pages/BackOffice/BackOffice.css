@@ -211,8 +211,8 @@
    display: flex;
    flex-wrap: wrap;
    gap: 20px;
-   justify-content: space-between;
-   align-items: flex-start;
+   justify-content: center;
+   align-items: center;
    margin-bottom: 20px;
  }
  
@@ -303,8 +303,6 @@
  .report-table-wrapper .data-table td {
    min-width: 140px;
  }
- 
-}
 
 .packages-grid {
   display: grid;

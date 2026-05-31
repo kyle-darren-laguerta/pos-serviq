@@ -219,6 +219,9 @@ const POSScreen = () => {
 
   return (
     <div className="pos-container">
+      <div className="logo-container">
+        <img src="../public/serviq-logo-white.png" alt="Logo" className="logo" />
+      </div>
       <div className="pos-nav-row">
         <button className="nav-btn" onClick={() => navigate('/kds')}>Kitchen</button>
         <button className="nav-btn" onClick={() => navigate('/inventory')}>Inventory</button>

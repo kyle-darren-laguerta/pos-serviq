@@ -14,7 +14,7 @@ const initialEmployees = [
 export default function BackOffice() {
   const navigate = useNavigate();
   
-  // State for tabs (Staff vs Roles vs Delivery) and employee data
+  // State for tabs (Staff vs Roles) and employee data
   const [activeTab, setActiveTab] = useState('employees');
   const [employees, setEmployees] = useState(initialEmployees);
   const [roles, setRoles] = useState([]);
@@ -29,6 +29,7 @@ export default function BackOffice() {
   const [employeeError, setEmployeeError] = useState(null);
   const [roleError, setRoleError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingRoleId, setEditingRoleId] = useState(null);
 
   const [revenueStartDate, setRevenueStartDate] = useState(() => {
     const start = new Date();
@@ -76,8 +77,18 @@ export default function BackOffice() {
   const [monthlyItemSoldError, setMonthlyItemSoldError] = useState(null);
   const [isMonthlyItemSoldLoading, setIsMonthlyItemSoldLoading] = useState(false);
 
-  const handleOpenModal = () => setIsModalOpen(true);
-  const handleCloseModal = () => setIsModalOpen(false);
+  const handleOpenModal = () => {
+    // clear editing state when opening a generic add modal
+    setEditingRoleId(null);
+    setRoleName('');
+    setRoleWagePerHour('');
+    setRoleWagePerMonth('');
+    setIsModalOpen(true);
+  };
+  const handleCloseModal = () => {
+    setEditingRoleId(null);
+    setIsModalOpen(false);
+  };
 
   const modalTitle = activeTab === 'employees'
     ? 'Add New Employee'
@@ -91,6 +102,7 @@ export default function BackOffice() {
   const [packageName, setPackageName] = useState('');
   const [packageDescription, setPackageDescription] = useState('');
   const [packagePrice, setPackagePrice] = useState('');
+  const [packageStatus, setPackageStatus] = useState('available');
   const [selectedItems, setSelectedItems] = useState([]);
   const [foodPackages, setFoodPackages] = useState([]);
   const [error, setError] = useState(null);
@@ -214,6 +226,52 @@ export default function BackOffice() {
       }
     } catch (err) {
       console.error('Failed to create role:', err);
+      setRoleError('Could not connect to the server.');
+    }
+  };
+
+  const handleEditRole = (role) => {
+    setEditingRoleId(role.role_id);
+    setRoleName(role.role_name || '');
+    setRoleWagePerHour(role.wage_per_hour ?? '');
+    setRoleWagePerMonth(role.wage_per_month ?? '');
+    setRoleError(null);
+    setIsModalOpen(true);
+  };
+
+  const handleUpdateRole = async (e) => {
+    e.preventDefault();
+    if (!editingRoleId) return;
+    if (!roleName || roleWagePerHour === '' || roleWagePerMonth === '') {
+      setRoleError('Please fill in all role fields.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/employee/roles/${editingRoleId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          role_name: roleName,
+          wage_per_hour: parseFloat(roleWagePerHour),
+          wage_per_month: parseFloat(roleWagePerMonth)
+        })
+      });
+
+      const result = await response.json();
+      if (response.ok && result.success) {
+        setEditingRoleId(null);
+        setRoleName('');
+        setRoleWagePerHour('');
+        setRoleWagePerMonth('');
+        setRoleError(null);
+        setIsModalOpen(false);
+        fetchRoles();
+      } else {
+        setRoleError(result.message || 'Failed to update role');
+      }
+    } catch (err) {
+      console.error('Failed to update role:', err);
       setRoleError('Could not connect to the server.');
     }
   };
@@ -431,6 +489,7 @@ export default function BackOffice() {
     const payload = {
       package_name: packageName,
       total_price: totalPrice,
+      status: packageStatus,
       items: selectedItems.map(item => ({
         id: item.menu_item_id,
         quantity: item.quantity
@@ -445,36 +504,16 @@ export default function BackOffice() {
 
     const result = await response.json();
     if (response.ok && result.success) {
-      const newPackage = {
-        id: result.data?.package_id || `PKG-${Date.now()}`,
-        package_name: packageName,
-        description: packageDescription,
-        total_price: totalPrice,
-        items: selectedItems.map(item => {
-          const menuItem = menuItems.find(m => m.menu_item_id === item.menu_item_id);
-          return {
-            menu_item_id: item.menu_item_id,
-            name: menuItem?.name || 'Unknown',
-            quantity: item.quantity,
-            itemPrice: menuItem?.price || 0
-          };
-        })
-      };
-
-      setFoodPackages(prev => [...prev, newPackage]);
       setPackageName('');
       setPackageDescription('');
       setPackagePrice('');
+      setPackageStatus('available');
       setSelectedItems([]);
       setError(null);
+      fetchFoodPackages();
     } else {
       setError(result.message || 'Failed to create food package');
     }
-  };
-
-  // CREATE a DELETE query here
-  const handleDeletePackage = (packageId) => {
-    setFoodPackages(foodPackages.filter(pkg => pkg.id !== packageId));
   };
 
   return (
@@ -496,12 +535,6 @@ export default function BackOffice() {
             onClick={() => setActiveTab('roles')}
           >
             💼 Roles & Wages
-          </button>
-          <button 
-            className={`sidebar-btn ${activeTab === 'locations' ? 'active' : ''}`}
-            onClick={() => setActiveTab('locations')}
-          >
-            📍 Delivery Zones
           </button>
           <button 
             className={`sidebar-btn ${activeTab === 'packages' ? 'active' : ''}`}
@@ -529,7 +562,6 @@ export default function BackOffice() {
           <h1>
             {activeTab === 'employees' && 'Staff Management'}
             {activeTab === 'roles' && 'Roles & Wages'}
-            {activeTab === 'locations' && 'Delivery Zones'}
             {activeTab === 'packages' && 'Food Packages'}
             {activeTab === 'reports' && 'Reports'}
           </h1>
@@ -594,7 +626,7 @@ export default function BackOffice() {
                       <td>₱{role.wage_per_hour ?? '0.00'}</td>
                       <td>₱{role.wage_per_month ?? '0.00'}</td>
                       <td>
-                        <button className="edit-btn">Edit</button>
+                        <button className="edit-btn" onClick={() => handleEditRole(role)}>Edit</button>
                       </td>
                     </tr>
                   ))}
@@ -640,6 +672,18 @@ export default function BackOffice() {
                         onChange={(e) => setPackagePrice(e.target.value)}
                         placeholder="₱0.00"
                       />
+                    </div>
+
+                    <div>
+                      <label>Package Status</label>
+                      <select
+                        value={packageStatus}
+                        onChange={(e) => setPackageStatus(e.target.value)}
+                        required
+                      >
+                        <option value="available">Available</option>
+                        <option value="unavailable">Unavailable</option>
+                      </select>
                     </div>
 
                     <div>
@@ -709,7 +753,10 @@ export default function BackOffice() {
                         <div key={pkg.package_id} className="package-card">
                           <div className="package-header">
                             <h4>{pkg.package_name}</h4>
-                            <span className="package-price">₱{pkg.total_price}</span>
+                            <div className="package-meta">
+                              <span className="package-price">₱{pkg.total_price}</span>
+                              <span className="package-status">{pkg.status || 'available'}</span>
+                            </div>
                           </div>
                           {pkg.description && (
                             <p className="package-description">None</p>
@@ -724,12 +771,6 @@ export default function BackOffice() {
                               ))}
                             </ul>
                           </div>
-                          <button
-                            className="delete-package-btn"
-                            onClick={() => handleDeletePackage(pkg.id)}
-                          >
-                            🗑️ Delete
-                          </button>
                         </div>
                       ))}
                     </div>
@@ -1264,7 +1305,7 @@ export default function BackOffice() {
                   </div>
                 </form>
               ) : activeTab === 'roles' ? (
-                <form onSubmit={handleCreateRole} className="modal-form">
+                <form onSubmit={editingRoleId ? handleUpdateRole : handleCreateRole} className="modal-form">
                   {roleError && <div className="error-message">{roleError}</div>}
 
                   <div className="field-group">
@@ -1309,7 +1350,7 @@ export default function BackOffice() {
                       Cancel
                     </button>
                     <button type="submit" className="save-btn">
-                      Add Role
+                      {editingRoleId ? 'Update Role' : 'Add Role'}
                     </button>
                   </div>
                 </form>

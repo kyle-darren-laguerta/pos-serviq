@@ -46,7 +46,16 @@
 /* Form Elements */
 .res-form-panel form { display: flex; flex-direction: column; gap: 15px; }
 .res-form-panel label { font-weight: bold; color: #94a3b8; font-size: 13px; text-transform: uppercase; }
-.res-form-panel input, .res-form-panel select {
+.res-form-panel input {
+  width: 93%;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #475569;
+  background-color: #0f172a;
+  color: white;
+}
+
+.res-form-panel select {
   width: 100%;
   padding: 12px;
   border-radius: 6px;

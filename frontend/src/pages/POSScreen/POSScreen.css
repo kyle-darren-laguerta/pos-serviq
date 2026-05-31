@@ -14,6 +14,19 @@
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+.logo-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background-color: #1e293b;
+}
+
+.logo-container img.logo {
+  height: 100px;
+  width: auto;
+}
+
 /* NAVBAR */
 .pos-nav-row {
   display: flex;

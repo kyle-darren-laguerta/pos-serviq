@@ -2,16 +2,17 @@ import db from '../config/db.js';
 
 export const getFoodPackages = async (req, res) => {
     try {
-        // Get all food packages
+        // Get only available food packages
         const [packages] = await db.query(`
-            SELECT package_id, package_name, total_price 
+            SELECT package_id, package_name, total_price, status 
             FROM food_package
+            WHERE status = 'available'
         `);
 
         if (packages.length === 0) {
             return res.status(404).json({ 
                 success: false, 
-                message: "No food packages found" 
+                message: "No available food packages found" 
             });
         }
 
@@ -33,6 +34,7 @@ export const getFoodPackages = async (req, res) => {
                     package_id: pkg.package_id,
                     package_name: pkg.package_name,
                     total_price: pkg.total_price,
+                    status: pkg.status,
                     items: items
                 };
             })
@@ -56,7 +58,7 @@ export const getFoodPackageById = async (req, res) => {
 
     try {
         const [packages] = await db.query(`
-            SELECT package_id, package_name, total_price 
+            SELECT package_id, package_name, total_price, status
             FROM food_package 
             WHERE package_id = ?
         `, [packageId]);
@@ -86,6 +88,7 @@ export const getFoodPackageById = async (req, res) => {
             package_id: pkg.package_id,
             package_name: pkg.package_name,
             total_price: pkg.total_price,
+            status: pkg.status,
             items: items
         };
 
@@ -103,7 +106,8 @@ export const getFoodPackageById = async (req, res) => {
 };
 
 export const createFoodPackage = async (req, res) => {
-    const { package_name, total_price, items } = req.body;
+    const { package_name, total_price, items, status } = req.body;
+    const packageStatus = status || 'available';
 
     const connection = await db.getConnection();
 
@@ -112,8 +116,8 @@ export const createFoodPackage = async (req, res) => {
 
         // Insert into food_package table
         const [result] = await connection.query(
-            `INSERT INTO food_package (package_name, total_price) VALUES (?, ?)`,
-            [package_name, total_price]
+            `INSERT INTO food_package (package_name, total_price, status) VALUES (?, ?, ?)`,
+            [package_name, total_price, packageStatus]
         );
 
         const packageId = result.insertId;
@@ -134,7 +138,7 @@ export const createFoodPackage = async (req, res) => {
         res.status(201).json({
             success: true,
             message: "Food package created successfully",
-            data: { package_id: packageId }
+            data: { package_id: packageId, status: packageStatus }
         });
     } catch (error) {
         if (connection) {
@@ -151,3 +155,4 @@ export const createFoodPackage = async (req, res) => {
         }
     }
 };
+

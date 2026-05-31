@@ -86,6 +86,36 @@ export const createRole = async (req, res) => {
     }
 };
 
+export const updateRole = async (req, res) => {
+    const id = req.params.id;
+    const { role_name, wage_per_hour, wage_per_month } = req.body;
+
+    if (!role_name || wage_per_hour === undefined || wage_per_month === undefined) {
+        return res.status(400).json({
+            success: false,
+            message: 'role_name, wage_per_hour, and wage_per_month are required'
+        });
+    }
+
+    try {
+        const [result] = await db.query(
+            'UPDATE Role SET role_name = ?, wage_per_hour = ?, wage_per_month = ? WHERE role_id = ?',
+            [role_name, wage_per_hour, wage_per_month, id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ success: false, message: 'Role not found' });
+        }
+
+        res.json({
+            success: true,
+            message: 'Role updated successfully'
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Database error' });
+    }
+};
 export const createEmployee = async (req, res) => {
     const { full_name, hire_date, contact_number, overtime_rate, role_id } = req.body;
 

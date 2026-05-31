@@ -21,6 +21,17 @@
   margin: 0;
 }
 
+.toggle-btn {
+  padding: 6px 12px;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  margin-left: 5px;
+}
+
 .back-btn {
   padding: 10px 20px;
   background-color: #334155;
@@ -199,3 +210,23 @@
 .edit-btn:hover {
   background-color: #64748b;
 }
+
+.remove-btn {
+  padding: 6px 12px;
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  min-width: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.remove-btn:hover {
+  background-color: #dc2626;
+}
+

@@ -2,7 +2,7 @@ import express from 'express';
 import { 
     getFoodPackages, 
     getFoodPackageById, 
-    createFoodPackage 
+    createFoodPackage
 } from '../controller/foodPackageControllers.js';
 
 const route = express.Router();
@@ -24,5 +24,6 @@ route.get('/:id', getFoodPackageById);
  * Status: Working
  */
 route.post('/', createFoodPackage);
+
 
 export default route;

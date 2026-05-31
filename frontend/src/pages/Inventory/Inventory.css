@@ -75,6 +75,24 @@
   box-sizing: border-box;
 }
 
+.label {
+  font-weight: bold;
+  color: #cbd5e1;
+  margin-bottom: 6px;
+  display: block;
+  font-size: 13px;
+}
+
+.input-style {
+  width: 100%;
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid #475569;
+  background-color: #0f172a;
+  color: white;
+  box-sizing: border-box;
+}
+
 .form-actions {
   display: flex;
   gap: 10px;
@@ -172,6 +190,7 @@
 
 .waste-entry-form {
   margin-top: 10px;
+  margin-bottom: 10px;
   padding: 14px;
   background-color: #111827;
   border: 1px solid #334155;
@@ -194,6 +213,39 @@
 
 .waste-entry-form input {
   width: 100%;
+  height: 38px;
+  /* padding: 10px; */
+  border-radius: 4px;
+  border: 1px solid #475569;
+  background-color: #0f172a;
+  color: white;
+}
+
+.supply-entry-form {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  padding: 14px;
+  background-color: #111827;
+  border: 1px solid #334155;
+  border-radius: 8px;
+}
+
+.supply-entry-form label {
+  font-weight: bold;
+  color: #cbd5e1;
+  margin-bottom: 6px;
+  display: block;
+  font-size: 13px;
+}
+
+.supply-form-row {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.supply-form-row input {
+  width: 70%;
   padding: 10px;
   border-radius: 4px;
   border: 1px solid #475569;
@@ -203,15 +255,31 @@
 
 .record-btn {
   padding: 6px 12px;
-  background-color: #0ea5e9;
+  background-color: #e9280e;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   font-size: 12px;
+  margin-left: 15px;
 }
 
 .record-btn:hover {
+  background-color: #f7422a;
+}
+
+.supply-btn {
+  padding: 6px 12px;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  margin-left: 15px;
+}
+
+.supply-btn:hover {
   background-color: #0284c7;
 }
 
