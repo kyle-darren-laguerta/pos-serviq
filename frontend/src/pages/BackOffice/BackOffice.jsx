@@ -23,7 +23,11 @@ export default function BackOffice() {
   const [contactNumber, setContactNumber] = useState('');
   const [overtimeRate, setOvertimeRate] = useState('');
   const [selectedRole, setSelectedRole] = useState('');
+  const [roleName, setRoleName] = useState('');
+  const [roleWagePerHour, setRoleWagePerHour] = useState('');
+  const [roleWagePerMonth, setRoleWagePerMonth] = useState('');
   const [employeeError, setEmployeeError] = useState(null);
+  const [roleError, setRoleError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [revenueStartDate, setRevenueStartDate] = useState(() => {
@@ -53,15 +57,35 @@ export default function BackOffice() {
   const [attendanceData, setAttendanceData] = useState([]);
   const [attendanceError, setAttendanceError] = useState(null);
   const [isAttendanceLoading, setIsAttendanceLoading] = useState(false);
+  const [partTimeSalaryStartDate, setPartTimeSalaryStartDate] = useState(() => {
+    const start = new Date();
+    start.setDate(start.getDate() - 30);
+    return start.toISOString().slice(0, 10);
+  });
+  const [partTimeSalaryEndDate, setPartTimeSalaryEndDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [partTimeSalaryData, setPartTimeSalaryData] = useState([]);
+  const [partTimeSalaryError, setPartTimeSalaryError] = useState(null);
+  const [isPartTimeSalaryLoading, setIsPartTimeSalaryLoading] = useState(false);
+  const [monthlyItemSoldStartDate, setMonthlyItemSoldStartDate] = useState(() => {
+    const start = new Date();
+    start.setDate(start.getDate() - 30);
+    return start.toISOString().slice(0, 10);
+  });
+  const [monthlyItemSoldEndDate, setMonthlyItemSoldEndDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [monthlyItemSoldData, setMonthlyItemSoldData] = useState([]);
+  const [monthlyItemSoldError, setMonthlyItemSoldError] = useState(null);
+  const [isMonthlyItemSoldLoading, setIsMonthlyItemSoldLoading] = useState(false);
 
   const handleOpenModal = () => setIsModalOpen(true);
   const handleCloseModal = () => setIsModalOpen(false);
 
   const modalTitle = activeTab === 'employees'
     ? 'Add New Employee'
-    : activeTab === 'packages'
-      ? 'Create New Food Package'
-      : 'Add New Record';
+    : activeTab === 'roles'
+      ? 'Add New Role'
+      : activeTab === 'packages'
+        ? 'Create New Food Package'
+        : 'Add New Record';
   
   // Food Package states
   const [packageName, setPackageName] = useState('');
@@ -157,6 +181,43 @@ export default function BackOffice() {
     }
   };
 
+  const handleCreateRole = async (e) => {
+    e.preventDefault();
+    if (!roleName || roleWagePerHour === '' || roleWagePerMonth === '') {
+      setRoleError('Please fill in all role fields.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/employee/roles`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          role_name: roleName,
+          wage_per_hour: parseFloat(roleWagePerHour),
+          wage_per_month: parseFloat(roleWagePerMonth)
+        })
+      });
+
+      const result = await response.json();
+      if (response.ok && result.success) {
+        setRoleName('');
+        setRoleWagePerHour('');
+        setRoleWagePerMonth('');
+        setRoleError(null);
+        setIsModalOpen(false);
+        fetchRoles();
+      } else {
+        setRoleError(result.message || 'Failed to add role');
+      }
+    } catch (err) {
+      console.error('Failed to create role:', err);
+      setRoleError('Could not connect to the server.');
+    }
+  };
+
 
   const fetchFoodPackages = async () => {
     try {
@@ -213,18 +274,19 @@ export default function BackOffice() {
 
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/finance/expenses/${revenueStartDate}/${revenueEndDate}`
+        `${import.meta.env.VITE_BACKEND_URL}/finance/expenses/${expensesStartDate}/${expensesEndDate}`
       );
       const result = await response.json();
 
       if (response.ok && result.success) {
-        setExpensesData(Array.isArray(result.data) ? result.data : []);
+        const expensesPayload = result.data;
+        setExpensesData(Array.isArray(expensesPayload) ? expensesPayload : [expensesPayload]);
       } else {
         setExpensesData([]);
-        setExpensesError(result.message || 'Unable to load revenue report.');
+        setExpensesError(result.message || 'Unable to load expenses report.');
       }
     } catch (err) {
-      console.error('Revenue report fetch failed:', err);
+      console.error('Expenses report fetch failed:', err);
       setExpensesData([]);
       setExpensesError('Could not connect to the server.');
     } finally {
@@ -265,6 +327,66 @@ export default function BackOffice() {
   const handleAttendanceFilterSubmit = (e) => {
     e.preventDefault();
     fetchAttendanceReport();
+  };
+
+  const fetchPartTimeSalaryReport = async () => {
+    setIsPartTimeSalaryLoading(true);
+    setPartTimeSalaryError(null);
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/finance/parttime-salary/${partTimeSalaryStartDate}/${partTimeSalaryEndDate}`
+      );
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setPartTimeSalaryData(Array.isArray(result.data) ? result.data : []);
+      } else {
+        setPartTimeSalaryData([]);
+        setPartTimeSalaryError(result.message || 'Unable to load part-time salary report.');
+      }
+    } catch (err) {
+      console.error('Part-time salary report fetch failed:', err);
+      setPartTimeSalaryData([]);
+      setPartTimeSalaryError('Could not connect to the server.');
+    } finally {
+      setIsPartTimeSalaryLoading(false);
+    }
+  };
+
+  const handlePartTimeSalaryFilterSubmit = (e) => {
+    e.preventDefault();
+    fetchPartTimeSalaryReport();
+  };
+
+  const fetchMonthlyItemSoldReport = async () => {
+    setIsMonthlyItemSoldLoading(true);
+    setMonthlyItemSoldError(null);
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/finance/monthly-item-sold/${monthlyItemSoldStartDate}/${monthlyItemSoldEndDate}`
+      );
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setMonthlyItemSoldData(Array.isArray(result.data) ? result.data : []);
+      } else {
+        setMonthlyItemSoldData([]);
+        setMonthlyItemSoldError(result.message || 'Unable to load item sold report.');
+      }
+    } catch (err) {
+      console.error('Monthly item sold report fetch failed:', err);
+      setMonthlyItemSoldData([]);
+      setMonthlyItemSoldError('Could not connect to the server.');
+    } finally {
+      setIsMonthlyItemSoldLoading(false);
+    }
+  };
+
+  const handleMonthlyItemSoldFilterSubmit = (e) => {
+    e.preventDefault();
+    fetchMonthlyItemSoldReport();
   };
 
 
@@ -452,6 +574,33 @@ export default function BackOffice() {
                 </table>
               </div>
             </>
+          ) : activeTab === 'roles' ? (
+            <div className="table-wrapper">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Role ID</th>
+                    <th>Role Name</th>
+                    <th>Wage Per Hour</th>
+                    <th>Wage Per Month</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {roles.map((role) => (
+                    <tr key={role.role_id}>
+                      <td><span className="id-badge">{role.role_id}</span></td>
+                      <td>{role.role_name}</td>
+                      <td>₱{role.wage_per_hour ?? '0.00'}</td>
+                      <td>₱{role.wage_per_month ?? '0.00'}</td>
+                      <td>
+                        <button className="edit-btn">Edit</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : activeTab === 'packages' ? (
             <div className="packages-container">
               {error && <div className="error-message">{error}</div>}
@@ -682,7 +831,7 @@ export default function BackOffice() {
                     <h2>Expenses Report</h2>
                     <p>Review revenue by interval for completed financial performance.</p>
                   </div>
-                  <form className="report-filters" onSubmit={handleRevenueFilterSubmit}>
+                  <form className="report-filters" onSubmit={handleExpensesFilterSubmit}>
                     <div className="filter-group">
                       <label>Start Date</label>
                       <input
@@ -707,12 +856,12 @@ export default function BackOffice() {
                   </form>
                 </div>
 
-                {revenueError && <div className="error-message">{revenueError}</div>}
+                {expensesError && <div className="error-message">{expensesError}</div>}
 
                 <div className="revenue-summary-grid">
                   <div className="report-card">
                     <span>Total Rows</span>
-                    <strong>{revenueData.length}</strong>
+                    <strong>{expensesData.length}</strong>
                   </div>
                   <div className="report-card">
                     <span>Interval</span>
@@ -720,7 +869,7 @@ export default function BackOffice() {
                   </div>
                   <div className="report-card">
                     <span>Status</span>
-                    <strong>{isRevenueLoading ? 'Loading...' : 'Ready'}</strong>
+                    <strong>{isExpensesLoading ? 'Loading...' : 'Ready'}</strong>
                   </div>
                 </div>
 
@@ -728,8 +877,8 @@ export default function BackOffice() {
                   <table className="data-table">
                     <thead>
                       <tr>
-                        {revenueData.length > 0 ? (
-                          Object.keys(revenueData[0]).map((field) => (
+                        {expensesData.length > 0 ? (
+                          Object.keys(expensesData[0]).map((field) => (
                             <th key={field}>{field.replace(/_/g, ' ')}</th>
                           ))
                         ) : (
@@ -738,14 +887,14 @@ export default function BackOffice() {
                       </tr>
                     </thead>
                     <tbody>
-                      {isRevenueLoading ? (
+                      {isExpensesLoading ? (
                         <tr>
-                          <td colSpan={revenueData[0] ? Object.keys(revenueData[0]).length : 1}>
-                            Loading revenue...
+                          <td colSpan={expensesData[0] ? Object.keys(expensesData[0]).length : 1}>
+                            Loading expenses...
                           </td>
                         </tr>
-                      ) : revenueData.length > 0 ? (
-                        revenueData.map((row, index) => (
+                      ) : expensesData.length > 0 ? (
+                        expensesData.map((row, index) => (
                           <tr key={index}>
                             {Object.values(row).map((value, index2) => (
                               <td key={index2}>{value ?? '-'}</td>
@@ -754,7 +903,7 @@ export default function BackOffice() {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={1}>No revenue data found for the selected interval.</td>
+                          <td colSpan={1}>No expenses data found for the selected interval.</td>
                         </tr>
                       )}
                     </tbody>
@@ -765,7 +914,7 @@ export default function BackOffice() {
               <div className="report-section">
                 <div className="report-section-header">
                   <div>
-                    <h2>Employee Attendance Records</h2>
+                    <h2>Full Time Employee Attendance Records</h2>
                     <p>Review staff attendance and hours worked by date range.</p>
                   </div>
                   <form className="report-filters" onSubmit={handleAttendanceFilterSubmit}>
@@ -841,6 +990,178 @@ export default function BackOffice() {
                       ) : (
                         <tr>
                           <td colSpan={1}>No attendance records found for the selected interval.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="report-section">
+                <div className="report-section-header">
+                  <div>
+                    <h2>Part Time Employee Salary Report</h2>
+                    <p>Review part-time employee expected salary based on hours worked.</p>
+                  </div>
+                  <form className="report-filters" onSubmit={handlePartTimeSalaryFilterSubmit}>
+                    <div className="filter-group">
+                      <label>Start Date</label>
+                      <input
+                        type="date"
+                        value={partTimeSalaryStartDate}
+                        onChange={(e) => setPartTimeSalaryStartDate(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="filter-group">
+                      <label>End Date</label>
+                      <input
+                        type="date"
+                        value={partTimeSalaryEndDate}
+                        onChange={(e) => setPartTimeSalaryEndDate(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <button type="submit" className="filter-btn">
+                      Update
+                    </button>
+                  </form>
+                </div>
+
+                {partTimeSalaryError && <div className="error-message">{partTimeSalaryError}</div>}
+
+                <div className="revenue-summary-grid">
+                  <div className="report-card">
+                    <span>Total Employees</span>
+                    <strong>{partTimeSalaryData.length}</strong>
+                  </div>
+                  <div className="report-card">
+                    <span>Interval</span>
+                    <strong>{partTimeSalaryStartDate} → {partTimeSalaryEndDate}</strong>
+                  </div>
+                  <div className="report-card">
+                    <span>Status</span>
+                    <strong>{isPartTimeSalaryLoading ? 'Loading...' : 'Ready'}</strong>
+                  </div>
+                </div>
+
+                <div className="report-table-wrapper">
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        {partTimeSalaryData.length > 0 ? (
+                          Object.keys(partTimeSalaryData[0]).map((field) => (
+                            <th key={field}>{field.replace(/_/g, ' ')}</th>
+                          ))
+                        ) : (
+                          <th>No data available</th>
+                        )}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {isPartTimeSalaryLoading ? (
+                        <tr>
+                          <td colSpan={partTimeSalaryData[0] ? Object.keys(partTimeSalaryData[0]).length : 1}>
+                            Loading salary records...
+                          </td>
+                        </tr>
+                      ) : partTimeSalaryData.length > 0 ? (
+                        partTimeSalaryData.map((row, index) => (
+                          <tr key={index}>
+                            {Object.values(row).map((value, index2) => (
+                              <td key={index2}>{value ?? '-'}</td>
+                            ))}
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={1}>No part-time salary records found for the selected interval.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="report-section">
+                <div className="report-section-header">
+                  <div>
+                    <h2>Menu Items Sold Report</h2>
+                    <p>Review item sales quantity for the selected date interval.</p>
+                  </div>
+                  <form className="report-filters" onSubmit={handleMonthlyItemSoldFilterSubmit}>
+                    <div className="filter-group">
+                      <label>Start Date</label>
+                      <input
+                        type="date"
+                        value={monthlyItemSoldStartDate}
+                        onChange={(e) => setMonthlyItemSoldStartDate(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="filter-group">
+                      <label>End Date</label>
+                      <input
+                        type="date"
+                        value={monthlyItemSoldEndDate}
+                        onChange={(e) => setMonthlyItemSoldEndDate(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <button type="submit" className="filter-btn">
+                      Update
+                    </button>
+                  </form>
+                </div>
+
+                {monthlyItemSoldError && <div className="error-message">{monthlyItemSoldError}</div>}
+
+                <div className="revenue-summary-grid">
+                  <div className="report-card">
+                    <span>Total Items</span>
+                    <strong>{monthlyItemSoldData.length}</strong>
+                  </div>
+                  <div className="report-card">
+                    <span>Interval</span>
+                    <strong>{monthlyItemSoldStartDate} → {monthlyItemSoldEndDate}</strong>
+                  </div>
+                  <div className="report-card">
+                    <span>Status</span>
+                    <strong>{isMonthlyItemSoldLoading ? 'Loading...' : 'Ready'}</strong>
+                  </div>
+                </div>
+
+                <div className="report-table-wrapper">
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        {monthlyItemSoldData.length > 0 ? (
+                          Object.keys(monthlyItemSoldData[0]).map((field) => (
+                            <th key={field}>{field.replace(/_/g, ' ')}</th>
+                          ))
+                        ) : (
+                          <th>No data available</th>
+                        )}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {isMonthlyItemSoldLoading ? (
+                        <tr>
+                          <td colSpan={monthlyItemSoldData[0] ? Object.keys(monthlyItemSoldData[0]).length : 1}>
+                            Loading item sales...
+                          </td>
+                        </tr>
+                      ) : monthlyItemSoldData.length > 0 ? (
+                        monthlyItemSoldData.map((row, index) => (
+                          <tr key={index}>
+                            {Object.values(row).map((value, index2) => (
+                              <td key={index2}>{value ?? '-'}</td>
+                            ))}
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={1}>No item sales found for the selected interval.</td>
                         </tr>
                       )}
                     </tbody>
@@ -939,6 +1260,56 @@ export default function BackOffice() {
                     </button>
                     <button type="submit" className="save-btn">
                       Add Employee
+                    </button>
+                  </div>
+                </form>
+              ) : activeTab === 'roles' ? (
+                <form onSubmit={handleCreateRole} className="modal-form">
+                  {roleError && <div className="error-message">{roleError}</div>}
+
+                  <div className="field-group">
+                    <label>Role Name</label>
+                    <input
+                      type="text"
+                      value={roleName}
+                      onChange={(e) => setRoleName(e.target.value)}
+                      placeholder="Cashier"
+                      required
+                    />
+                  </div>
+
+                  <div className="field-group">
+                    <label>Wage Per Hour</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={roleWagePerHour}
+                      onChange={(e) => setRoleWagePerHour(e.target.value)}
+                      placeholder="0.00"
+                      required
+                    />
+                  </div>
+
+                  <div className="field-group">
+                    <label>Wage Per Month</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={roleWagePerMonth}
+                      onChange={(e) => setRoleWagePerMonth(e.target.value)}
+                      placeholder="0.00"
+                      required
+                    />
+                  </div>
+
+                  <div className="modal-actions">
+                    <button type="button" className="cancel-btn" onClick={handleCloseModal}>
+                      Cancel
+                    </button>
+                    <button type="submit" className="save-btn">
+                      Add Role
                     </button>
                   </div>
                 </form>

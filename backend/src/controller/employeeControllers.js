@@ -47,7 +47,7 @@ export const getEmployeeById = async (req, res) => {
 
 export const getRoles = async (req, res) => {
     try {
-        const [rows] = await db.query("SELECT role_id, role_name FROM Role ORDER BY role_name ASC");
+        const [rows] = await db.query("SELECT role_id, role_name, wage_per_hour, wage_per_month FROM Role ORDER BY role_name ASC");
 
         res.json({
             success: true,
@@ -56,6 +56,33 @@ export const getRoles = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: "Database error" });
+    }
+};
+
+export const createRole = async (req, res) => {
+    const { role_name, wage_per_hour, wage_per_month } = req.body;
+
+    if (!role_name || wage_per_hour === undefined || wage_per_month === undefined) {
+        return res.status(400).json({
+            success: false,
+            message: 'role_name, wage_per_hour, and wage_per_month are required'
+        });
+    }
+
+    try {
+        const [result] = await db.query(
+            'INSERT INTO Role (role_name, wage_per_hour, wage_per_month) VALUES (?, ?, ?)',
+            [role_name, wage_per_hour, wage_per_month]
+        );
+
+        res.status(201).json({
+            success: true,
+            message: 'Role added successfully',
+            data: { role_id: result.insertId }
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Database error' });
     }
 };
 
@@ -195,7 +222,7 @@ export const punchAttendance = async (req, res) => {
 
 export const getAttendanceReport = async (req, res) => {
     const { startDate, endDate } = req.params;
-    let sql = `CALL CalculateExpectedSalary(?, ?)`;
+    let sql = `CALL CalculateExpectedSalaryFullTime(?, ?)`;
     const params = [startDate, endDate];
 
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
