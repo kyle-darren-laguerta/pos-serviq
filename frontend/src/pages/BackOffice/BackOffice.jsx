@@ -28,6 +28,15 @@ export default function BackOffice() {
   const [roleWagePerMonth, setRoleWagePerMonth] = useState('');
   const [employeeError, setEmployeeError] = useState(null);
   const [roleError, setRoleError] = useState(null);
+  const [locationError, setLocationError] = useState(null);
+  const [customerError, setCustomerError] = useState(null);
+  const [locationZones, setLocationZones] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [locationNameInput, setLocationNameInput] = useState('');
+  const [deliveryRateInput, setDeliveryRateInput] = useState('');
+  const [customerNameInput, setCustomerNameInput] = useState('');
+  const [customerContactInput, setCustomerContactInput] = useState('');
+  const [customerZoneId, setCustomerZoneId] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRoleId, setEditingRoleId] = useState(null);
 
@@ -112,6 +121,8 @@ export default function BackOffice() {
     fetchFoodPackages();
     fetchEmployees();
     fetchRoles();
+    fetchLocationZones();
+    fetchCustomers();
   }, []);
 
   useEffect(() => {
@@ -149,6 +160,106 @@ export default function BackOffice() {
       }
     } catch (err) {
       console.error('Failed to load roles:', err);
+    }
+  };
+
+  const fetchLocationZones = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/location-zone`);
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setLocationZones(result.data);
+        setLocationError(null);
+      } else {
+        setLocationError(result.message || 'Unable to load location zones');
+      }
+    } catch (err) {
+      console.error('Failed to load location zones:', err);
+      setLocationError('Could not connect to the server.');
+    }
+  };
+
+  const fetchCustomers = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/customer`);
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setCustomers(result.data);
+        setCustomerError(null);
+      } else {
+        setCustomerError(result.message || 'Unable to load customers');
+      }
+    } catch (err) {
+      console.error('Failed to load customers:', err);
+      setCustomerError('Could not connect to the server.');
+    }
+  };
+
+  const handleCreateLocationZone = async (e) => {
+    e.preventDefault();
+    if (!locationNameInput || deliveryRateInput === '') {
+      setLocationError('Please enter a location and delivery rate.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/location-zone`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          location_name: locationNameInput,
+          delivery_rate: parseFloat(deliveryRateInput)
+        })
+      });
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setLocationNameInput('');
+        setDeliveryRateInput('');
+        setLocationError(null);
+        fetchLocationZones();
+      } else {
+        setLocationError(result.message || 'Failed to add location zone');
+      }
+    } catch (err) {
+      console.error('Failed to create location zone:', err);
+      setLocationError('Could not connect to the server.');
+    }
+  };
+
+  const handleCreateCustomer = async (e) => {
+    e.preventDefault();
+    if (!customerNameInput || !customerZoneId) {
+      setCustomerError('Please enter a customer name and select a zone.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/customer`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          full_name: customerNameInput,
+          contact_number: customerContactInput || null,
+          location_zone_id: parseInt(customerZoneId, 10)
+        })
+      });
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setCustomerNameInput('');
+        setCustomerContactInput('');
+        setCustomerZoneId('');
+        setCustomerError(null);
+        fetchCustomers();
+      } else {
+        setCustomerError(result.message || 'Failed to add customer');
+      }
+    } catch (err) {
+      console.error('Failed to create customer:', err);
+      setCustomerError('Could not connect to the server.');
     }
   };
 
@@ -543,6 +654,12 @@ export default function BackOffice() {
             📦 Food Packages
           </button>
           <button 
+            className={`sidebar-btn ${activeTab === 'zones' ? 'active' : ''}`}
+            onClick={() => setActiveTab('zones')}
+          >
+            📍 Locations & Customers
+          </button>
+          <button 
             className={`sidebar-btn ${activeTab === 'reports' ? 'active' : ''}`}
             onClick={() => setActiveTab('reports')}
           >
@@ -563,9 +680,10 @@ export default function BackOffice() {
             {activeTab === 'employees' && 'Staff Management'}
             {activeTab === 'roles' && 'Roles & Wages'}
             {activeTab === 'packages' && 'Food Packages'}
+            {activeTab === 'zones' && 'Locations & Customers'}
             {activeTab === 'reports' && 'Reports'}
           </h1>
-          {activeTab !== 'reports' && (
+          {activeTab !== 'reports' && activeTab !== 'zones' && (
             <button className="add-new-btn" onClick={handleOpenModal}>+ Add New Record</button>
           )}
         </header>
@@ -632,6 +750,136 @@ export default function BackOffice() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          ) : activeTab === 'zones' ? (
+            <div className="zones-customers-container">
+              <div className="zones-customers-panel">
+                <div className="panel-block">
+                  <h3>Create New Location Zone</h3>
+                  {locationError && <p className="error-text">{locationError}</p>}
+                  <form onSubmit={handleCreateLocationZone} className="zone-form">
+                    <div>
+                      <label className="form-label">Location Name</label>
+                      <input
+                        className="form-input"
+                        type="text"
+                        value={locationNameInput}
+                        onChange={(e) => setLocationNameInput(e.target.value)}
+                        placeholder="e.g., Daraga"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="form-label">Delivery Rate</label>
+                      <input
+                        className="form-input"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={deliveryRateInput}
+                        onChange={(e) => setDeliveryRateInput(e.target.value)}
+                        placeholder="₱0.00"
+                        required
+                      />
+                    </div>
+                    <button type="submit" className="save-btn">Save Location Zone</button>
+                  </form>
+                </div>
+
+                <div className="panel-block">
+                  <h3>Add New Customer</h3>
+                  {customerError && <p className="error-text">{customerError}</p>}
+                  <form onSubmit={handleCreateCustomer} className="customer-form">
+                    <div>
+                      <label className="form-label">Customer Name</label>
+                      <input
+                        className="form-input"
+                        
+                        type="text"
+                        value={customerNameInput}
+                        onChange={(e) => setCustomerNameInput(e.target.value)}
+                        placeholder="e.g., Juan Dela Cruz"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="form-label">Contact Number</label>
+                      <input
+                        className="form-input"
+                        type="text"
+                        value={customerContactInput}
+                        onChange={(e) => setCustomerContactInput(e.target.value)}
+                        placeholder="Optional"
+                      />
+                    </div>
+                    <div>
+                      <label className="form-label">Location Zone</label>
+                      <select
+                        className="form-input"
+                        value={customerZoneId}
+                        onChange={(e) => setCustomerZoneId(e.target.value)}
+                        required
+                      >
+                        <option value="">Select zone</option>
+                        {locationZones.map((zone) => (
+                          <option key={zone.location_zone_id} value={zone.location_zone_id}>
+                            {zone.location_name} (₱{zone.delivery_rate})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <button type="submit" className="save-btn">Save Customer</button>
+                  </form>
+                </div>
+              </div>
+
+              <div className="zones-customers-list">
+                <div className="table-wrapper">
+                  <h3>Location Zones</h3>
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Delivery Rate</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {locationZones.map((zone) => (
+                        <tr key={zone.location_zone_id}>
+                          <td><span className="id-badge">{zone.location_zone_id}</span></td>
+                          <td>{zone.location_name}</td>
+                          <td>₱{parseFloat(zone.delivery_rate).toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="table-wrapper">
+                  <h3>Customers</h3>
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Contact</th>
+                        <th>Zone</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {customers.map((customer) => (
+                        <tr key={customer.person_id}>
+                          <td><span className="id-badge">{customer.person_id}</span></td>
+                          <td>{customer.full_name}</td>
+                          <td>{customer.contact_number || 'N/A'}</td>
+                          <td>{customer.location_name || 'N/A'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           ) : activeTab === 'packages' ? (
             <div className="packages-container">

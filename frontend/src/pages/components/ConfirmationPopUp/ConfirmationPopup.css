@@ -37,28 +37,36 @@
 /* Buttons */
 .popup-actions {
   display: flex;
-  justify-content: space-between;
+  gap: 12px;
 }
 
 .popup-btn {
+  flex: 1;
   padding: 10px 20px;
   font-size: 1rem;
   font-weight: bold;
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  width: 45%;
+  height: 5dvh;
+  width: auto;
+  min-width: 0;
 }
 
-.cancel-btn {
-  background-color: #334155;
-  color: #e5e7eb;
+.cancel {
+  background-color: #374151;
+  color: #f8fafc;
 }
 
-.confirm-btn {
-  background-color: #10b981; /* Green color matching your checkout button */
-  color: white;
+.confirm {
+  background-color: #2563eb;
+  color: #f8fafc;
 }
 
-.cancel-btn:hover { background-color: #475569; }
-.confirm-btn:hover { background-color: #059669; }
+.cancel:hover {
+  background-color: #4b5563;
+}
+
+.confirm:hover {
+  background-color: #1d4ed8;
+}

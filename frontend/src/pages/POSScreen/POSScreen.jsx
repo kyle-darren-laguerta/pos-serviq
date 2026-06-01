@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OrderContext } from '../../context/OrderContext';
 import { MenuContext } from '../../context/MenuContext';
@@ -22,9 +22,48 @@ const POSScreen = () => {
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [locationZones, setLocationZones] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [selectedLocationZoneId, setSelectedLocationZoneId] = useState('');
+  const [selectedCustomerId, setSelectedCustomerId] = useState('');
 
   const getItemId = (item) =>
     item.package_id ? `package-${item.package_id}` : `menu-${item.menu_item_id}`;
+
+  useEffect(() => {
+    fetchLocationZones();
+    fetchCustomers();
+  }, []);
+
+  const fetchLocationZones = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/location-zone`);
+      const result = await response.json();
+      if (response.ok && result.success) {
+        setLocationZones(result.data);
+      }
+    } catch (error) {
+      console.error('Unable to load location zones:', error);
+    }
+  };
+
+  const fetchCustomers = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/customer`);
+      const result = await response.json();
+      if (response.ok && result.success) {
+        setCustomers(result.data);
+      }
+    } catch (error) {
+      console.error('Unable to load customers:', error);
+    }
+  };
+
+  const getSelectedZone = () =>
+    locationZones.find((zone) => zone.location_zone_id === Number(selectedLocationZoneId));
+
+  const getSelectedCustomer = () =>
+    customers.find((customer) => customer.person_id === Number(selectedCustomerId));
 
   const addLineItemToCart = (item) => {
     const itemId = getItemId(item);
@@ -179,6 +218,9 @@ const POSScreen = () => {
     setStatusMessage('');
     setErrorMessage('');
 
+    const selectedZone = getSelectedZone();
+    const selectedCustomer = getSelectedCustomer();
+
     const orderPayload = {
       items: cart.map((item) =>
         item.package_id
@@ -191,8 +233,15 @@ const POSScreen = () => {
                 quantity: addon.quantity
               }))
             }
-      )
+      ),
+      person_id: selectedCustomer ? Number(selectedCustomer.person_id) : undefined
     };
+
+    const orderTableLabel = selectedCustomer
+      ? `${selectedCustomer.full_name}${selectedZone ? ' / ' + selectedZone.location_name : ''}`
+      : selectedZone
+      ? selectedZone.location_name
+      : 'Table 1';
 
     try {
       const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/order/`, {
@@ -203,7 +252,7 @@ const POSScreen = () => {
       const result = await response.json();
 
       if (response.ok && result.success) {
-        addOrder(cart, totalPrice, 'Table 1', result.order_id);
+        addOrder(cart, totalPrice, orderTableLabel, result.order_id);
         setCart([]);
         setStatusMessage('Order submitted successfully.');
       } else {
@@ -225,7 +274,7 @@ const POSScreen = () => {
       <div className="pos-nav-row">
         <button className="nav-btn" onClick={() => navigate('/kds')}>Kitchen</button>
         <button className="nav-btn" onClick={() => navigate('/inventory')}>Inventory</button>
-        <button className="nav-btn" onClick={() => navigate('/admin')}>Shift Management</button>
+        <button className="nav-btn" onClick={() => navigate('/admin')}>Admin</button>
         <button className="nav-btn" onClick={() => navigate('/reservations')}>Reservations</button>
         <button className="nav-btn" onClick={() => navigate('/manage-menu')}>Manage Menu</button>
         <button className="nav-btn" onClick={() => navigate('/attendance')}>Attendance</button>
@@ -389,6 +438,40 @@ const POSScreen = () => {
           </div>
 
           <div className="checkout-panel">
+            <div className="location-input-row">
+              <div className="checkout-select">
+                <label htmlFor="locationZone">Location Zone</label>
+                <select
+                  className="location-zone-select"
+                  id="locationZone"
+                  value={selectedLocationZoneId}
+                  onChange={(e) => setSelectedLocationZoneId(e.target.value)}
+                >
+                  <option value="">Select a zone</option>
+                  {locationZones.map((zone) => (
+                    <option key={zone.location_zone_id} value={zone.location_zone_id}>
+                      {zone.location_name} (₱{parseFloat(zone.delivery_rate).toFixed(2)})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="checkout-select">
+                <label htmlFor="customer">Customer</label>
+                <select
+                  className="customer-select"
+                  id="customer"
+                  value={selectedCustomerId}
+                  onChange={(e) => setSelectedCustomerId(e.target.value)}
+                >
+                  <option value="">Select a customer</option>
+                  {customers.map((customer) => (
+                    <option key={customer.person_id} value={customer.person_id}>
+                      {customer.full_name}{customer.location_name ? ` — ${customer.location_name}` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
             <div className="total-display">
               <span>Total:</span>
               <span>₱{totalPrice.toFixed(2)}</span>

@@ -117,7 +117,7 @@ import db from '../config/db.js';
     }
 */
 export const createBulkOrder = async (req, res) => {
-    const { items } = req.body;
+    const { items, person_id } = req.body;
 
     const connection = await db.getConnection();
 
@@ -125,10 +125,19 @@ export const createBulkOrder = async (req, res) => {
         await connection.beginTransaction();
 
         // 1. Create the parent order record
-        const [orderResult] = await connection.query(
-            'INSERT INTO order_table () VALUES ()',
-            []
-        );
+        const orderInsertColumns = [];
+        const orderInsertValues = [];
+
+        if (person_id !== undefined && person_id !== null) {
+            orderInsertColumns.push('person_id');
+            orderInsertValues.push(person_id);
+        }
+
+        const orderInsertSql = orderInsertColumns.length
+            ? `INSERT INTO order_table (${orderInsertColumns.join(', ')}) VALUES (${orderInsertColumns.map(() => '?').join(', ')})`
+            : 'INSERT INTO order_table () VALUES ()';
+
+        const [orderResult] = await connection.query(orderInsertSql, orderInsertValues);
         const generatedOrderId = orderResult.insertId;
 
         for (const item of items) {

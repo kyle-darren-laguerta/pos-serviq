@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAttendance, getEmployeeById, getEmployees, getEmployeeSalary, punchAttendance, createEmployee, getRoles, createRole, getAttendanceReport, updateRole } from '../controller/employeeControllers.js';
+import { getAttendance, getEmployeeById, getEmployees, punchAttendance, createEmployee, getRoles, createRole, getAttendanceReport, updateRole } from '../controller/employeeControllers.js';
 
 const route = express.Router();
 
@@ -16,9 +16,6 @@ route.put('/roles/:id', updateRole);
 
 // Insert new employee data in employee table
 route.post('/', createEmployee);
-
-// Get the employee Salary
-route.get('/salary', getEmployeeSalary);
 
 route.get('/', getEmployees);
 

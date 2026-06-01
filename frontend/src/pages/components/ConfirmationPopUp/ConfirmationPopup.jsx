@@ -12,10 +12,10 @@ const ConfirmationPopup = ({ isOpen, message, onConfirm, onCancel }) => {
         <p>{message}</p>
         
         <div className="popup-actions">
-          <button className="popup-btn cancel-btn" onClick={onCancel}>
+          <button className="popup-btn cancel" onClick={onCancel}>
             Cancel
           </button>
-          <button className="popup-btn confirm-btn" onClick={onConfirm}>
+          <button className="popup-btn confirm" onClick={onConfirm}>
             Yes, Proceed
           </button>
         </div>

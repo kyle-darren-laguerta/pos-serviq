@@ -671,3 +671,21 @@
   color: #cbd5e1;
   font-size: 1rem;
 }
+
+.form-label {
+  display: block;
+  color: #cbd5e1;
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 6px;
+}
+
+.form-input {
+  width: 40%;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #475569;
+  background-color: #0f172a;
+  color: #e2e8f0;
+  font-size: 0.9rem;
+}
