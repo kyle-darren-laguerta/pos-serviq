@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { OrderContext } from '../../context/OrderContext';
 import { MenuContext } from '../../context/MenuContext';
 import { InventoryContext } from '../../context/InventoryContext';
-import ConfirmationPopup from '../components/ConfirmationPopup/ConfirmationPopup';
+import ConfirmationPopup from '../components/ConfirmationPopUp/ConfirmationPopup';
 import './POSScreen.css';
 
 const POSScreen = () => {
