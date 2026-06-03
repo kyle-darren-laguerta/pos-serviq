@@ -60,10 +60,14 @@ const POSScreen = () => {
   };
 
   const getSelectedZone = () =>
-    locationZones.find((zone) => zone.location_zone_id === Number(selectedLocationZoneId));
+    selectedLocationZoneId
+      ? locationZones.find((zone) => zone.location_zone_id === Number(selectedLocationZoneId))
+      : undefined;
 
   const getSelectedCustomer = () =>
-    customers.find((customer) => customer.person_id === Number(selectedCustomerId));
+    selectedCustomerId
+      ? customers.find((customer) => customer.person_id === Number(selectedCustomerId))
+      : undefined;
 
   const addLineItemToCart = (item) => {
     const itemId = getItemId(item);
@@ -241,7 +245,7 @@ const POSScreen = () => {
       ? `${selectedCustomer.full_name}${selectedZone ? ' / ' + selectedZone.location_name : ''}`
       : selectedZone
       ? selectedZone.location_name
-      : 'Table 1';
+      : 'Dine-in';
 
     try {
       const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/order/`, {

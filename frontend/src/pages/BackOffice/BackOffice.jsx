@@ -118,22 +118,13 @@ export default function BackOffice() {
     ? 'Add New Employee'
     : activeTab === 'roles'
       ? 'Add New Role'
-      : activeTab === 'packages'
-        ? 'Create New Food Package'
-        : 'Add New Record';
+      : 'Add New Record';
   
-  // Food Package states
-  const [packageName, setPackageName] = useState('');
-  const [packageDescription, setPackageDescription] = useState('');
-  const [packagePrice, setPackagePrice] = useState('');
-  const [packageStatus, setPackageStatus] = useState('available');
   const [selectedItems, setSelectedItems] = useState([]);
-  const [foodPackages, setFoodPackages] = useState([]);
   const [error, setError] = useState(null);
   const { menuItems } = useContext(MenuContext);
 
   useEffect(() => {
-    fetchFoodPackages();
     fetchEmployees();
     fetchRoles();
     fetchLocationZones();
@@ -449,26 +440,6 @@ export default function BackOffice() {
     }
   };
 
-
-  const fetchFoodPackages = async () => {
-    try {
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/food-package/`);
-      const result = await response.json();
-      console.log('Food Packages API Response:', response.status, result);
-      if (response.ok && result.success) {
-        setFoodPackages(result.data);
-        setError(null);
-      } else {
-        const errorMsg = result.message || `Server error: ${response.status}`;
-        console.error('Food packages fetch error:', errorMsg);
-        setError(errorMsg);
-      }
-    } catch (err) {
-      console.error('Food packages fetch exception:', err);
-      setError('Could not connect to the server. Make sure the backend is running.');
-    }
-  };
-
   const fetchRevenueReport = async () => {
     setIsRevenueLoading(true);
     setRevenueError(null);
@@ -642,53 +613,6 @@ export default function BackOffice() {
     setSelectedItems(updated);
   };
 
-  const handleCreateFoodPackage = async (e) => {
-    e.preventDefault();
-    
-    if (!packageName || selectedItems.length === 0) {
-      setError('Please enter a package name and add at least one menu item');
-      return;
-    }
-
-    // Calculate total package price from selected items
-    let totalPrice = 0;
-    selectedItems.forEach(item => {
-      const menuItem = menuItems.find(m => m.menu_item_id === item.menu_item_id);
-      if (menuItem) {
-        totalPrice += menuItem.price * item.quantity;
-      }
-    });
-
-    const payload = {
-      package_name: packageName,
-      total_price: totalPrice,
-      status: packageStatus,
-      items: selectedItems.map(item => ({
-        id: item.menu_item_id,
-        quantity: item.quantity
-      }))
-    };
-
-    const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/food-package/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    const result = await response.json();
-    if (response.ok && result.success) {
-      setPackageName('');
-      setPackageDescription('');
-      setPackagePrice('');
-      setPackageStatus('available');
-      setSelectedItems([]);
-      setError(null);
-      fetchFoodPackages();
-    } else {
-      setError(result.message || 'Failed to create food package');
-    }
-  };
-
   return (
     <div className="admin-container">
       
@@ -708,12 +632,6 @@ export default function BackOffice() {
             onClick={() => setActiveTab('roles')}
           >
             💼 Roles & Wages
-          </button>
-          <button 
-            className={`sidebar-btn ${activeTab === 'packages' ? 'active' : ''}`}
-            onClick={() => setActiveTab('packages')}
-          >
-            📦 Food Packages
           </button>
           <button 
             className={`sidebar-btn ${activeTab === 'zones' ? 'active' : ''}`}
@@ -741,7 +659,6 @@ export default function BackOffice() {
           <h1>
             {activeTab === 'employees' && 'Staff Management'}
             {activeTab === 'roles' && 'Roles & Wages'}
-            {activeTab === 'packages' && 'Food Packages'}
             {activeTab === 'zones' && 'Locations & Customers'}
             {activeTab === 'reports' && 'Reports'}
           </h1>
@@ -940,151 +857,6 @@ export default function BackOffice() {
                       ))}
                     </tbody>
                   </table>
-                </div>
-              </div>
-            </div>
-          ) : activeTab === 'packages' ? (
-            <div className="packages-container">
-              {error && <div className="error-message">{error}</div>}
-              
-              <div className="packages-grid">
-                {/* Food Package Creation Form */}
-                <div className="add-package-panel">
-                  <h3>Create New Food Package</h3>
-                  <form onSubmit={handleCreateFoodPackage}>
-                    <div>
-                      <label>Package Name</label>
-                      <input
-                        type="text"
-                        value={packageName}
-                        onChange={(e) => setPackageName(e.target.value)}
-                        placeholder="e.g., Family Combo"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label>Description (Optional)</label>
-                      <textarea
-                        value={packageDescription}
-                        onChange={(e) => setPackageDescription(e.target.value)}
-                        placeholder="Describe this package..."
-                        rows="3"
-                      />
-                    </div>
-
-                    <div>
-                      <label>Package Price (Optional - auto-calculated if left blank)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={packagePrice}
-                        onChange={(e) => setPackagePrice(e.target.value)}
-                        placeholder="₱0.00"
-                      />
-                    </div>
-
-                    <div>
-                      <label>Package Status</label>
-                      <select
-                        value={packageStatus}
-                        onChange={(e) => setPackageStatus(e.target.value)}
-                        required
-                      >
-                        <option value="available">Available</option>
-                        <option value="unavailable">Unavailable</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label>📋 Menu Items in Package</label>
-                      <div className="menu-items-list">
-                        {selectedItems.map((item, index) => (
-                          <div key={index} className="menu-item-row">
-                            <select
-                              value={item.menu_item_id}
-                              onChange={(e) => handleMenuItemChange(index, e.target.value)}
-                              className="menu-item-select"
-                              required
-                            >
-                              <option value="">Select Menu Item</option>
-                              {menuItems.map((menuItem) => (
-                                <option key={menuItem.menu_item_id} value={menuItem.menu_item_id}>
-                                  {menuItem.name} - ₱{menuItem.price}
-                                </option>
-                              ))}
-                            </select>
-
-                            <input
-                              type="number"
-                              min="1"
-                              value={item.quantity}
-                              onChange={(e) => handleQuantityChange(index, e.target.value)}
-                              className="quantity-input"
-                              placeholder="Qty"
-                            />
-
-                            <button
-                              type="button"
-                              className="remove-item-btn"
-                              onClick={() => handleRemoveMenuItem(index)}
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-
-                      <button
-                        type="button"
-                        className="add-item-btn"
-                        onClick={handleAddMenuItem}
-                      >
-                        + Add Menu Item
-                      </button>
-                    </div>
-
-                    <div className="form-actions">
-                      <button type="submit" className="save-btn">
-                        Save Package
-                      </button>
-                    </div>
-                  </form>
-                </div>
-
-                {/* Food Packages List */}
-                <div className="packages-list-panel">
-                  <h3>Food Packages ({foodPackages.length})</h3>
-                  {foodPackages.length === 0 ? (
-                    <p className="empty-list">No food packages yet. Create one to get started!</p>
-                  ) : (
-                    <div className="packages-list">
-                      {foodPackages.map((pkg) => (
-                        <div key={pkg.package_id} className="package-card">
-                          <div className="package-header">
-                            <h4>{pkg.package_name}</h4>
-                            <div className="package-meta">
-                              <span className="package-price">₱{pkg.total_price}</span>
-                              <span className="package-status">{pkg.status || 'available'}</span>
-                            </div>
-                          </div>
-                          {pkg.description && (
-                            <p className="package-description">None</p>
-                          )}
-                          <div className="package-items">
-                            <strong>Items:</strong>
-                            <ul>
-                              {pkg.items.map((item, idx) => (
-                                <li key={idx}>
-                                  {item.quantity}x {item.name} (₱{item.itemPrice})
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </div>
             </div>

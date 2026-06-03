@@ -84,7 +84,7 @@ export const getPartTimeSalaryReport = async (req, res) => {
 
 export const getMonthlyItemSold = async (req, res) => {
     const { startDate, endDate } = req.params;
-    const sql = `CALL GetMonthlyItemSold(?, ?)`;
+    const sql = `CALL GetTopSellingMenuItems(?, ?)`;
     const params = [startDate, endDate];
 
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
