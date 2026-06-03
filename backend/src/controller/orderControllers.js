@@ -291,7 +291,7 @@ export const createReceipt = async (req, res) => {
             SELECT SUM(l.quantity * m.price) AS order_amount
             FROM line_item l
             JOIN menu_item m ON m.menu_item_id = l.menu_item_id
-            WHERE l.order_id = ?`, 
+            WHERE l.order_id = ? AND l.menu_item_id IS NOT NULL`, 
             [orderID]
         );
 
@@ -304,21 +304,45 @@ export const createReceipt = async (req, res) => {
             [orderID]
         );
 
+        // Calculate food package amount
+        const [packageAmount] = await connection.query(`
+            SELECT COALESCE(SUM(l.quantity * fp.total_price), 0) AS package_amount
+            FROM line_item l
+            JOIN food_package fp ON fp.package_id = l.package_id
+            WHERE l.order_id = ? AND l.package_id IS NOT NULL`,
+            [orderID]
+        );
+
         const orderTotal = orderAmount[0].order_amount ?? 0;
         const addonTotal = addonAmount[0].addon_amount ?? 0;
-        const grandTotal = parseFloat(orderTotal) + parseFloat(addonTotal);
+        const packageTotal = packageAmount[0].package_amount ?? 0;
+        const grandTotal = parseFloat(orderTotal) + parseFloat(addonTotal) + parseFloat(packageTotal);
 
-        // Calculate ingredient cost for this order
-        // Sum of (quantity_required * ingredient.unit_cost * ordered_quantity) across all ingredients used
-        const [ingredientCostRows] = await connection.query(`
+        // Calculate ingredient cost for menu items in the order
+        // Formula: quantity_required * ingredient.cost_per_unit * line_item.quantity
+        const [ingredientCostMenuItems] = await connection.query(`
             SELECT COALESCE(SUM(r.quantity_required * i.cost_per_unit * l.quantity), 0) AS ingredient_cost
             FROM line_item l
             JOIN recipe r ON r.menu_item_id = l.menu_item_id
             JOIN ingredient i ON i.ingredient_id = r.ingredient_id
-            WHERE l.order_id = ?
+            WHERE l.order_id = ? AND l.menu_item_id IS NOT NULL
         `, [parsedOrderID]);
 
-        const ingredientCost = parseFloat(ingredientCostRows[0].ingredient_cost ?? 0) || 0;
+        // Calculate ingredient cost for food packages
+        // Formula: package_menu_item.quantity * quantity_required * ingredient.cost_per_unit * line_item.quantity
+        const [ingredientCostPackages] = await connection.query(`
+            SELECT COALESCE(SUM(pmi.quantity * r.quantity_required * i.cost_per_unit * l.quantity), 0) AS ingredient_cost
+            FROM line_item l
+            JOIN food_package fp ON fp.package_id = l.package_id
+            JOIN package_menu_item pmi ON pmi.package_id = fp.package_id
+            JOIN recipe r ON r.menu_item_id = pmi.menu_item_id
+            JOIN ingredient i ON i.ingredient_id = r.ingredient_id
+            WHERE l.order_id = ? AND l.package_id IS NOT NULL
+        `, [parsedOrderID]);
+
+        const ingredientCostMenuItemsTotal = parseFloat(ingredientCostMenuItems[0].ingredient_cost ?? 0) || 0;
+        const ingredientCostPackagesTotal = parseFloat(ingredientCostPackages[0].ingredient_cost ?? 0) || 0;
+        const ingredientCost = ingredientCostMenuItemsTotal + ingredientCostPackagesTotal;
 
         const [receiptResult] = await connection.query(
             'INSERT INTO receipt (order_id, amount, ingredient_cost, date) VALUES (?, ?, ?, CURDATE())', 
