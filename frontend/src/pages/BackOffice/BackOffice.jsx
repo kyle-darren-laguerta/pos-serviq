@@ -761,7 +761,7 @@ export default function BackOffice() {
                         required
                       />
                     </div>
-                    <button type="submit" className="save-btn">Save Location Zone</button>
+                    <button type="submit" className="save-loc-btn">Save Location Zone</button>
                   </form>
                 </div>
 
@@ -807,7 +807,7 @@ export default function BackOffice() {
                         ))}
                       </select>
                     </div>
-                    <button type="submit" className="save-btn">Save Customer</button>
+                    <button type="submit" className="save-cust-btn">Save Customer</button>
                   </form>
                 </div>
               </div>
@@ -1304,12 +1304,12 @@ export default function BackOffice() {
         {isModalOpen && (
           <div className="modal-overlay" onClick={handleCloseModal}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <button className="modal-close-btn" onClick={handleCloseModal}>&times;</button>
               <div className="modal-header">
-                <div>
+                <div className="modal-title">
                   <h2>{modalTitle}</h2>
                   <p className="modal-subtitle">Fill in the fields below and save to add a new record.</p>
                 </div>
-                <button className="modal-close-btn" onClick={handleCloseModal}>&times;</button>
               </div>
 
               {activeTab === 'employees' ? (

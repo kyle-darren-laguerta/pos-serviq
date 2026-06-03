@@ -622,8 +622,7 @@ export default function Inventory() {
                       <label>Waste Quantity</label>
                       <input
                         type="number"
-                        min="1"
-                        step="1"
+                        step="0.01"
                         value={wasteQuantity}
                         onChange={(e) => setWasteQuantity(e.target.value)}
                         required

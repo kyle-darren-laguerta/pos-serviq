@@ -435,10 +435,11 @@
   margin-top: 15px;
 }
 
-.save-btn {
+.save-loc-btn,
+.save-cust-btn {
   flex: 1;
-  padding: 12px;
-  background-color: #10b981;
+  padding: 12px 20px;
+  background-color: #2563eb;
   color: white;
   border: none;
   border-radius: 4px;
@@ -448,8 +449,9 @@
   margin-top: 10px;
 }
 
-.save-btn:hover {
-  background-color: #059669;
+.save-loc-btn:hover,
+.save-cust-btn:hover {
+  background-color: #1d4ed8;
 }
 
 .packages-list-panel {
@@ -581,9 +583,10 @@
 
 .modal-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   gap: 16px;
   align-items: flex-start;
+  align-items: center;
   margin-bottom: 20px;
 }
 
@@ -600,6 +603,8 @@
 }
 
 .modal-close-btn {
+  position: relative;
+  left: 360px;
   background: transparent;
   border: none;
   color: #cbd5e1;
@@ -624,10 +629,19 @@
   font-weight: 600;
 }
 
-.field-group input,
 .field-group select,
 .field-group textarea {
   width: 100%;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid #334155;
+  background-color: #111827;
+  color: #e2e8f0;
+  font-family: inherit;
+}
+
+.field-group input {
+  width: 95%;
   padding: 14px 16px;
   border-radius: 12px;
   border: 1px solid #334155;
@@ -689,4 +703,9 @@
   background-color: #0f172a;
   color: #e2e8f0;
   font-size: 0.9rem;
+}
+
+.modal-title{
+  margin: 0;
+  font-size: 1.55rem;
 }

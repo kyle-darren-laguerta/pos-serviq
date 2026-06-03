@@ -258,7 +258,6 @@ export default function Reservations() {
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div className="booking-date">{reservation.reservation_date?.split('T')[0] || reservation.reservation_date}</div>
-                    <div style={{ color: '#94a3b8', fontSize: '14px' }}>ID: {reservation.reservation_id}</div>
                   </div>
                 </div>
               ))
