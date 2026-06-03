@@ -25,7 +25,7 @@ export default function ManageMenu() {
   const [error, setError] = useState(null);
   const [activeSection, setActiveSection] = useState('menu');
   const [packageName, setPackageName] = useState('');
-  const [packageStatus, setPackageStatus] = useState('available');
+  const [packageStatus, setPackageStatus] = useState('For Daily Operation');
   const [selectedItems, setSelectedItems] = useState([]);
   const [foodPackages, setFoodPackages] = useState([]);
   const [packageError, setPackageError] = useState(null);
@@ -376,7 +376,7 @@ export default function ManageMenu() {
       const result = await response.json();
       if (response.ok && result.success) {
         setPackageName('');
-        setPackageStatus('available');
+        setPackageStatus('For Daily Operation');
         setSelectedItems([]);
         setPackageError(null);
         fetchFoodPackages();
@@ -698,13 +698,13 @@ export default function ManageMenu() {
               </div>
 
               <div>
-                <label>Status</label>
+                <label>Availability</label>
                 <select
                   value={packageStatus}
                   onChange={(e) => setPackageStatus(e.target.value)}
                 >
-                  <option value="available">Available</option>
-                  <option value="unavailable">Unavailable</option>
+                  <option value="For Daily Operation">For Daily Operation</option>
+                  <option value="For Event">For Event</option>
                 </select>
               </div>
 

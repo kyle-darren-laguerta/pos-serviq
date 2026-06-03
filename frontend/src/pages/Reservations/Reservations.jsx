@@ -14,7 +14,7 @@ export default function Reservations() {
   const [contact, setContact] = useState('');
   const [location, setLocation] = useState('');
   const [eventDate, setEventDate] = useState('');
-  const [packageSelected, setPackageSelected] = useState('Barkada Package');
+  const [packageSelected, setPackageSelected] = useState('');
   const [downPayment, setDownPayment] = useState('');
   const [serviceFee, setServiceFee] = useState('');
   const [status, setStatus] = useState('Pending');
@@ -209,12 +209,14 @@ export default function Reservations() {
               <div>
                 <label>Package Selected</label>
                 <select value={packageSelected} onChange={(e) => setPackageSelected(e.target.value)}>
-                  <option value="">Select a package</option> {/* Good practice to have a default */}
-                    {packages.map((pkg) => (
-                      <option key={pkg.package_id} value={pkg.package_id}>
-                        {pkg.package_name}
-                      </option>
-                    ))}
+                  <option value="">Select a package</option>
+                    {packages
+                      .filter((pkg) => pkg.status === 'For Event')
+                      .map((pkg) => (
+                        <option key={pkg.package_id} value={pkg.package_id}>
+                          {pkg.package_name}
+                        </option>
+                      ))}
                 </select>
               </div>
             </div>

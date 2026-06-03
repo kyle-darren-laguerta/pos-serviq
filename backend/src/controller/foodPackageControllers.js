@@ -2,19 +2,11 @@ import db from '../config/db.js';
 
 export const getFoodPackages = async (req, res) => {
     try {
-        // Get only available food packages
+        // Get all food packages so the UI can filter by status
         const [packages] = await db.query(`
             SELECT package_id, package_name, total_price, status 
             FROM food_package
-            WHERE status = 'available'
         `);
-
-        if (packages.length === 0) {
-            return res.status(404).json({ 
-                success: false, 
-                message: "No available food packages found" 
-            });
-        }
 
         // For each package, get its menu items
         const packagesWithItems = await Promise.all(
@@ -107,7 +99,8 @@ export const getFoodPackageById = async (req, res) => {
 
 export const createFoodPackage = async (req, res) => {
     const { package_name, total_price, items, status } = req.body;
-    const packageStatus = status || 'available';
+    const allowedStatuses = ['For Event', 'For Daily Operation'];
+    const packageStatus = allowedStatuses.includes(status) ? status : 'For Daily Operation';
 
     const connection = await db.getConnection();
 

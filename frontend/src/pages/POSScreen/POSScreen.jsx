@@ -212,7 +212,7 @@ const POSScreen = () => {
       return matchesSearch && item.availability_status === 'Available';
     }
 
-    return matchesSearch;
+    return matchesSearch && item.status === 'For Daily Operation';
   });
 
   const handleSubmitOrder = async () => {
