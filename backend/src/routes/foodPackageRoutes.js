@@ -2,7 +2,8 @@ import express from 'express';
 import { 
     getFoodPackages, 
     getFoodPackageById, 
-    createFoodPackage
+    createFoodPackage,
+    updateFoodPackage
 } from '../controller/foodPackageControllers.js';
 
 const route = express.Router();
@@ -25,5 +26,10 @@ route.get('/:id', getFoodPackageById);
  */
 route.post('/', createFoodPackage);
 
+/**
+ * Description: Update an existing food package by ID
+ * Status: New
+ */
+route.patch('/:id', updateFoodPackage);
 
 export default route;

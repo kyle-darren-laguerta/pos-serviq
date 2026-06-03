@@ -29,6 +29,8 @@ export default function ManageMenu() {
   const [selectedItems, setSelectedItems] = useState([]);
   const [foodPackages, setFoodPackages] = useState([]);
   const [packageError, setPackageError] = useState(null);
+  const [editPackageId, setEditPackageId] = useState(null);
+  const [isEditPackageMode, setIsEditPackageMode] = useState(false);
 
   useEffect(() => {
     const fetchIngredients = async () => {
@@ -64,6 +66,15 @@ export default function ManageMenu() {
     setAddonMenuItemIds([]);
     setEditAddonId(null);
     setIsEditAddonMode(false);
+  };
+
+  const clearPackageForm = () => {
+    setPackageName('');
+    setPackageStatus('For Daily Operation');
+    setSelectedItems([]);
+    setEditPackageId(null);
+    setIsEditPackageMode(false);
+    setPackageError(null);
   };
 
   const handleRecipeIngredientChange = (index, ingredientId) => {
@@ -157,6 +168,25 @@ export default function ManageMenu() {
     setIsEditAddonMode(true);
     setAddonMenuItemIds([]);
     clearForm();
+  };
+
+  const handleEditPackage = (pkg) => {
+    setPackageName(pkg.package_name);
+    setPackageStatus(pkg.status || 'For Daily Operation');
+    setSelectedItems(
+      pkg.items.map((item) => ({
+        menu_item_id: item.menu_item_id,
+        quantity: item.quantity
+      }))
+    );
+    setEditPackageId(pkg.package_id);
+    setIsEditPackageMode(true);
+    setPackageError(null);
+    clearForm();
+  };
+
+  const handleCancelPackageEdit = () => {
+    clearPackageForm();
   };
 
   const handleToggleAddonStatus = async (addon) => {
@@ -361,9 +391,15 @@ export default function ManageMenu() {
       return sum + (menuItem?.price || 0) * item.quantity;
     }, 0);
 
+    const isUpdating = isEditPackageMode && editPackageId;
+    const url = isUpdating
+      ? `${import.meta.env.VITE_BACKEND_URL}/food-package/${editPackageId}`
+      : `${import.meta.env.VITE_BACKEND_URL}/food-package/`;
+    const method = isUpdating ? 'PATCH' : 'POST';
+
     try {
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/food-package/`, {
-        method: 'POST',
+      const response = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           package_name: packageName,
@@ -375,17 +411,14 @@ export default function ManageMenu() {
 
       const result = await response.json();
       if (response.ok && result.success) {
-        setPackageName('');
-        setPackageStatus('For Daily Operation');
-        setSelectedItems([]);
-        setPackageError(null);
+        clearPackageForm();
         fetchFoodPackages();
-        alert('Food package created successfully!');
+        alert(isUpdating ? 'Food package updated successfully!' : 'Food package created successfully!');
       } else {
-        setPackageError(result.message || 'Unable to create food package.');
+        setPackageError(result.message || 'Unable to save food package.');
       }
     } catch (error) {
-      console.error('Unable to create food package:', error);
+      console.error('Unable to save food package:', error);
       setPackageError('Could not connect to the server.');
     }
   };
@@ -755,8 +788,13 @@ export default function ManageMenu() {
 
               <div className="form-actions">
                 <button type="submit" className="save-btn">
-                  Save Food Package
+                  {isEditPackageMode ? 'Update Food Package' : 'Save Food Package'}
                 </button>
+                {isEditPackageMode && (
+                  <button type="button" className="cancel-btn" onClick={handleCancelPackageEdit}>
+                    Cancel
+                  </button>
+                )}
               </div>
             </form>
           </div>
@@ -786,6 +824,15 @@ export default function ManageMenu() {
                           </div>
                         ))}
                       </div>
+                    </div>
+                    <div className="menu-item-actions">
+                      <button
+                        className="edit-btn"
+                        type="button"
+                        onClick={() => handleEditPackage(pkg)}
+                      >
+                        Edit
+                      </button>
                     </div>
                   </div>
                 ))

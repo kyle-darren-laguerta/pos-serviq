@@ -149,3 +149,64 @@ export const createFoodPackage = async (req, res) => {
     }
 };
 
+export const updateFoodPackage = async (req, res) => {
+    const packageId = req.params.id;
+    const { package_name, total_price, items, status } = req.body;
+    const allowedStatuses = ['For Event', 'For Daily Operation'];
+    const packageStatus = allowedStatuses.includes(status) ? status : 'For Daily Operation';
+
+    const connection = await db.getConnection();
+
+    try {
+        await connection.beginTransaction();
+
+        const [existing] = await connection.query(
+            `SELECT package_id FROM food_package WHERE package_id = ?`,
+            [packageId]
+        );
+
+        if (existing.length === 0) {
+            await connection.rollback();
+            return res.status(404).json({ success: false, message: 'Food package not found' });
+        }
+
+        await connection.query(
+            `UPDATE food_package SET package_name = ?, total_price = ?, status = ? WHERE package_id = ?`,
+            [package_name, total_price, packageStatus, packageId]
+        );
+
+        await connection.query(
+            `DELETE FROM package_menu_item WHERE package_id = ?`,
+            [packageId]
+        );
+
+        for (const item of items) {
+            const menuItemId = item.menu_item_id || item.id;
+            const quantity = item.quantity;
+
+            await connection.query(
+                `INSERT INTO package_menu_item (menu_item_id, package_id, quantity) VALUES (?, ?, ?)`,
+                [menuItemId, packageId, quantity]
+            );
+        }
+
+        await connection.commit();
+
+        res.json({
+            success: true,
+            message: 'Food package updated successfully',
+            data: { package_id: packageId, status: packageStatus }
+        });
+    } catch (error) {
+        if (connection) {
+            await connection.rollback();
+        }
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Database error' });
+    } finally {
+        if (connection) {
+            connection.release();
+        }
+    }
+};
+
