@@ -46,7 +46,7 @@ export default function WasteItems() {
     <div className="inventory-container">
       <header className="inv-header">
         <div>
-          <h1>🗑️ Waste Records</h1>
+          <h1>Waste Records</h1>
           <p style={{ fontSize: '14px', color: '#94a3b8', marginTop: '8px' }}>
             Viewing waste items recorded from inventory.
           </p>

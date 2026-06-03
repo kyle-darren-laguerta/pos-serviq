@@ -140,7 +140,7 @@ export default function Reservations() {
   return (
     <div className="res-container">
       <header className="res-header">
-        <h1>📅 ServiQ Reservations & Catering</h1>
+        <h1>ServiQ Reservations & Catering</h1>
         <button 
           onClick={() => navigate('/')}
           style={{ padding: '10px 20px', backgroundColor: '#334155', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
@@ -153,7 +153,7 @@ export default function Reservations() {
         
         {/* LEFT COLUMN: Booking Form */}
         <div className="res-form-panel">
-          <h3>➕ New Booking</h3>
+          <h3>New Booking</h3>
           
           <form onSubmit={handleSaveReservation}>
             <div>
@@ -229,7 +229,7 @@ export default function Reservations() {
 
         {/* RIGHT COLUMN: Live Bookings */}
         <div className="res-list-panel">
-          <h3>📋 Upcoming Events & Bookings</h3>
+          <h3>Upcoming Events & Bookings</h3>
           <div style={{ marginTop: '20px' }}>
             {reservationError && <div className="error-message">{reservationError}</div>}
             {visibleReservations.length === 0 && !reservationError ? (

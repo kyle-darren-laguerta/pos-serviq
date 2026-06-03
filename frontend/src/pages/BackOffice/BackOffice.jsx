@@ -665,25 +665,25 @@ export default function BackOffice() {
             className={`sidebar-btn ${activeTab === 'employees' ? 'active' : ''}`}
             onClick={() => setActiveTab('employees')}
           >
-            👥 Staff Management
+            Staff Management
           </button>
           <button 
             className={`sidebar-btn ${activeTab === 'roles' ? 'active' : ''}`}
             onClick={() => setActiveTab('roles')}
           >
-            💼 Roles & Wages
+            Roles & Wages
           </button>
           <button 
             className={`sidebar-btn ${activeTab === 'zones' ? 'active' : ''}`}
             onClick={() => setActiveTab('zones')}
           >
-            📍 Locations & Customers
+            Locations & Customers
           </button>
           <button 
             className={`sidebar-btn ${activeTab === 'reports' ? 'active' : ''}`}
             onClick={() => setActiveTab('reports')}
           >
-            📊 Reports
+            Reports
           </button>
         </nav>
 

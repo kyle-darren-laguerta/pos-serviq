@@ -393,7 +393,6 @@ const POSScreen = () => {
         <section className="order-section">
           <div className="ticket-header">
             <h3>Current Order</h3>
-            <span className="order-id">#ORD-{new Date().getTime().toString().slice(-4)}</span>
           </div>
 
           <div className="cart-list">

@@ -393,7 +393,7 @@ export default function ManageMenu() {
   return (
     <div className="menu-container">
       <header className="menu-header">
-        <h1>🍽️ ServiQ Menu Manager</h1>
+        <h1>ServiQ Menu Manager</h1>
         <button className="back-btn" onClick={() => navigate('/')}>
           ← Return to POS
         </button>
@@ -419,7 +419,7 @@ export default function ManageMenu() {
       {activeSection === 'menu' ? (
         <div className="menu-grid">
         <div className="add-item-panel">
-          <h3>➕ Add New Menu Item</h3>
+          <h3>Add New Menu Item</h3>
           <p style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '20px' }}>
             Create or update menu items to sync with the database.
           </p>
@@ -522,7 +522,7 @@ export default function ManageMenu() {
         </div>
 
         <div className="menu-list-panel">
-          <h3>📋 Current Menu Items</h3>
+          <h3>Current Menu Items</h3>
           <div style={{ marginTop: '20px' }}>
             {menuItems.length > 0 ? (
               menuItems.map((item) => (
@@ -567,7 +567,7 @@ export default function ManageMenu() {
         </div>
 
         <div className="add-item-panel">
-          <h3>➕ Add New Addon</h3>
+          <h3>Add New Addon</h3>
           <p style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '20px' }}>
             Add extra items/sides that customers can add to their orders.
           </p>
@@ -633,7 +633,7 @@ export default function ManageMenu() {
         </div>
 
         <div className="menu-list-panel">
-          <h3>📦 Current Addons</h3>
+          <h3>Current Addons</h3>
           <div style={{ marginTop: '20px' }}>
             {addons.length > 0 ? (
               addons.map((addon) => (
@@ -680,7 +680,7 @@ export default function ManageMenu() {
       ) : (
         <div className="packages-container">
           <div className="add-item-panel">
-            <h3>📦 Create New Food Package</h3>
+            <h3>Create New Food Package</h3>
             <p style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '20px' }}>
               Build food packages from existing menu items.
             </p>
@@ -762,7 +762,7 @@ export default function ManageMenu() {
           </div>
 
           <div className="menu-list-panel packages-list-panel">
-            <h3>📦 Current Food Packages</h3>
+            <h3>Current Food Packages</h3>
             <div style={{ marginTop: '20px' }}>
               {foodPackages.length > 0 ? (
                 foodPackages.map((pkg) => (
@@ -775,7 +775,7 @@ export default function ManageMenu() {
                         <span className="price">
                           ₱{parseFloat(pkg.total_price).toFixed(2)}
                         </span>
-                        <span className={`status ${pkg.status === 'available' ? 'available' : 'unavailable'}`}>
+                        <span className={'status available'}>
                           {pkg.status}
                         </span>
                       </div>

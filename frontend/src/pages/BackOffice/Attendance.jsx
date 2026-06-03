@@ -76,7 +76,7 @@ export default function Attendance() {
   return (
     <div className="attendance-container">
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1>🕒 Staff Attendance System</h1>
+        <h1>Staff Attendance System</h1>
         <button onClick={() => navigate('/')} className="back-btn" style={{ padding: '8px 16px', cursor: 'pointer' }}>
           ← Exit to POS
         </button>

@@ -326,9 +326,9 @@ export default function Inventory() {
     <div className="inventory-container">
       
       <header className="inv-header">
-        <h1>📦 ServiQ Stockroom</h1>
+        <h1>ServiQ Stockroom</h1>
         <button className="back-btn" onClick={() => navigate('/inventory/waste')}>
-          🗑️ Waste Records
+          Waste Records
         </button>
         <button className="back-btn" onClick={() => navigate('/')}>
           ← Return to POS
@@ -338,7 +338,7 @@ export default function Inventory() {
       <div className="inv-grid">
         
         <div className="add-item-panel">
-          <h3>➕ Add New Ingredient</h3>
+          <h3>Add New Ingredient</h3>
           <p style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '20px' }}>Enter new stock items to sync with the database.</p>
           
           <form onSubmit={handleSaveIngredient}>
@@ -439,7 +439,7 @@ export default function Inventory() {
         </div>
 
         <div className="supplier-panel">
-          <h3>🧾 Suppliers</h3>
+          <h3>Suppliers</h3>
           <p style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '20px' }}>
             Add suppliers and review supplier ingredient relationships.
           </p>
@@ -510,7 +510,7 @@ export default function Inventory() {
         </div>
 
         <div className="current-stock-panel">
-          <h3>📊 Current Stock Levels</h3>
+          <h3>Current Stock Levels</h3>
           {error && <div className="error-message">{error}</div>}
           <div style={{ marginTop: '20px' }}>
             {inventory.map((item) => (
