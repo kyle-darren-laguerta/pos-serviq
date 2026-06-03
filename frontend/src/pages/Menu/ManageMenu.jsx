@@ -23,6 +23,12 @@ export default function ManageMenu() {
 
   const { menuItems, addons, fetchMenuItems, fetchAddons } = useContext(MenuContext);
   const [error, setError] = useState(null);
+  const [activeSection, setActiveSection] = useState('menu');
+  const [packageName, setPackageName] = useState('');
+  const [packageStatus, setPackageStatus] = useState('available');
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [foodPackages, setFoodPackages] = useState([]);
+  const [packageError, setPackageError] = useState(null);
 
   useEffect(() => {
     const fetchIngredients = async () => {
@@ -41,6 +47,7 @@ export default function ManageMenu() {
     };
 
     fetchIngredients();
+    fetchFoodPackages();
   }, []);
 
   const clearForm = () => {
@@ -295,6 +302,94 @@ export default function ManageMenu() {
     }
   };
 
+  const fetchFoodPackages = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/food-package/`);
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setFoodPackages(result.data);
+        setPackageError(null);
+      } else {
+        setPackageError(result.message || 'Unable to load food packages.');
+      }
+    } catch (error) {
+      console.error('Unable to fetch food packages:', error);
+      setPackageError('Could not connect to the server.');
+    }
+  };
+
+  const handleAddPackageItem = () => {
+    setSelectedItems([...selectedItems, { menu_item_id: '', quantity: 1 }]);
+  };
+
+  const handleRemovePackageItem = (index) => {
+    setSelectedItems(selectedItems.filter((_, i) => i !== index));
+  };
+
+  const handlePackageItemChange = (index, menuItemId) => {
+    const updated = [...selectedItems];
+    updated[index].menu_item_id = parseInt(menuItemId, 10) || '';
+    setSelectedItems(updated);
+  };
+
+  const handlePackageQuantityChange = (index, quantity) => {
+    const updated = [...selectedItems];
+    updated[index].quantity = parseInt(quantity, 10) || 1;
+    setSelectedItems(updated);
+  };
+
+  const handleCreateFoodPackage = async (e) => {
+    e.preventDefault();
+
+    if (!packageName || selectedItems.length === 0) {
+      setPackageError('Please enter a package name and add at least one menu item.');
+      return;
+    }
+
+    const payloadItems = selectedItems
+      .filter((item) => item.menu_item_id)
+      .map((item) => ({ menu_item_id: item.menu_item_id, quantity: item.quantity }));
+
+    if (payloadItems.length === 0) {
+      setPackageError('Please select at least one valid menu item.');
+      return;
+    }
+
+    const totalPrice = payloadItems.reduce((sum, item) => {
+      const menuItem = menuItems.find((mi) => mi.menu_item_id === item.menu_item_id);
+      return sum + (menuItem?.price || 0) * item.quantity;
+    }, 0);
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/food-package/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          package_name: packageName,
+          total_price: totalPrice,
+          status: packageStatus,
+          items: payloadItems,
+        }),
+      });
+
+      const result = await response.json();
+      if (response.ok && result.success) {
+        setPackageName('');
+        setPackageStatus('available');
+        setSelectedItems([]);
+        setPackageError(null);
+        fetchFoodPackages();
+        alert('Food package created successfully!');
+      } else {
+        setPackageError(result.message || 'Unable to create food package.');
+      }
+    } catch (error) {
+      console.error('Unable to create food package:', error);
+      setPackageError('Could not connect to the server.');
+    }
+  };
+
   return (
     <div className="menu-container">
       <header className="menu-header">
@@ -304,7 +399,25 @@ export default function ManageMenu() {
         </button>
       </header>
 
-      <div className="menu-grid">
+      <div className="manage-menu-tabs">
+        <button
+          className={`tab ${activeSection === 'menu' ? 'active' : ''}`}
+          type="button"
+          onClick={() => setActiveSection('menu')}
+        >
+          Manage Menu
+        </button>
+        <button
+          className={`tab ${activeSection === 'packages' ? 'active' : ''}`}
+          type="button"
+          onClick={() => setActiveSection('packages')}
+        >
+          Manage Packages
+        </button>
+      </div>
+
+      {activeSection === 'menu' ? (
+        <div className="menu-grid">
         <div className="add-item-panel">
           <h3>➕ Add New Menu Item</h3>
           <p style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '20px' }}>
@@ -564,6 +677,127 @@ export default function ManageMenu() {
           </div>
         </div>
       </div>
+      ) : (
+        <div className="packages-container">
+          <div className="add-item-panel">
+            <h3>📦 Create New Food Package</h3>
+            <p style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '20px' }}>
+              Build food packages from existing menu items.
+            </p>
+            {packageError && <p className="error-text">{packageError}</p>}
+            <form onSubmit={handleCreateFoodPackage}>
+              <div>
+                <label>Package Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g., Barkada Bundle"
+                  value={packageName}
+                  onChange={(e) => setPackageName(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div>
+                <label>Status</label>
+                <select
+                  value={packageStatus}
+                  onChange={(e) => setPackageStatus(e.target.value)}
+                >
+                  <option value="available">Available</option>
+                  <option value="unavailable">Unavailable</option>
+                </select>
+              </div>
+
+              <div className="recipe-panel">
+                <h4>Package Items</h4>
+                {selectedItems.map((item, index) => (
+                  <div className="recipe-row" key={`${item.menu_item_id}-${index}`}>
+                    <div>
+                      <label>Menu Item</label>
+                      <select
+                        value={item.menu_item_id}
+                        onChange={(e) => handlePackageItemChange(index, e.target.value)}
+                        required
+                      >
+                        <option value="">Select menu item</option>
+                        {menuItems.map((menuItem) => (
+                          <option key={menuItem.menu_item_id} value={menuItem.menu_item_id}>
+                            {menuItem.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label>Quantity</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={item.quantity}
+                        onChange={(e) => handlePackageQuantityChange(index, e.target.value)}
+                        required
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      className="remove-btn"
+                      onClick={() => handleRemovePackageItem(index)}
+                      aria-label="Remove package item row"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+
+                <button type="button" className="add-btn" onClick={handleAddPackageItem}>
+                  + Add Menu Item
+                </button>
+              </div>
+
+              <div className="form-actions">
+                <button type="submit" className="save-btn">
+                  Save Food Package
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div className="menu-list-panel packages-list-panel">
+            <h3>📦 Current Food Packages</h3>
+            <div style={{ marginTop: '20px' }}>
+              {foodPackages.length > 0 ? (
+                foodPackages.map((pkg) => (
+                  <div key={pkg.package_id} className="menu-item">
+                    <div className="menu-item-details">
+                      <div className="menu-item-header">
+                        <span className="menu-item-name">{pkg.package_name}</span>
+                      </div>
+                      <div className="menu-item-info">
+                        <span className="price">
+                          ₱{parseFloat(pkg.total_price).toFixed(2)}
+                        </span>
+                        <span className={`status ${pkg.status === 'available' ? 'available' : 'unavailable'}`}>
+                          {pkg.status}
+                        </span>
+                      </div>
+                      <div className="package-item-list">
+                        {pkg.items?.map((item) => (
+                          <div key={`${pkg.package_id}-${item.menu_item_id}`} className="package-item-row">
+                            {item.name} x{item.quantity}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p style={{ color: '#94a3b8', textAlign: 'center', paddingTop: '20px' }}>
+                  No food packages found. Create one to get started!
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

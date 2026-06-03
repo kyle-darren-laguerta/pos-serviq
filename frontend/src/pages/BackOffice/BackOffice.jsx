@@ -23,6 +23,9 @@ export default function BackOffice() {
   const [contactNumber, setContactNumber] = useState('');
   const [overtimeRate, setOvertimeRate] = useState('');
   const [selectedRole, setSelectedRole] = useState('');
+  const [employmentType, setEmploymentType] = useState('');
+  const [minHoursPerDay, setMinHoursPerDay] = useState('');
+  const [maxHoursPerDay, setMaxHoursPerDay] = useState('');
   const [roleName, setRoleName] = useState('');
   const [roleWagePerHour, setRoleWagePerHour] = useState('');
   const [roleWagePerMonth, setRoleWagePerMonth] = useState('');
@@ -92,10 +95,22 @@ export default function BackOffice() {
     setRoleName('');
     setRoleWagePerHour('');
     setRoleWagePerMonth('');
+    setFullName('');
+    setHireDate('');
+    setContactNumber('');
+    setOvertimeRate('');
+    setSelectedRole('');
+    setEmploymentType('');
+    setMinHoursPerDay('');
+    setMaxHoursPerDay('');
+    setEmployeeError(null);
     setIsModalOpen(true);
   };
   const handleCloseModal = () => {
     setEditingRoleId(null);
+    setEmploymentType('');
+    setMinHoursPerDay('');
+    setMaxHoursPerDay('');
     setIsModalOpen(false);
   };
 
@@ -255,7 +270,7 @@ export default function BackOffice() {
         setCustomerError(null);
         fetchCustomers();
       } else {
-        setCustomerError(result.message || 'Failed to add customer');
+        setCustomerError(result.error || 'Failed to add customer');
       }
     } catch (err) {
       console.error('Failed to create customer:', err);
@@ -265,13 +280,24 @@ export default function BackOffice() {
 
   const handleCreateEmployee = async (e) => {
     e.preventDefault();
-    if (!fullName || !hireDate || !contactNumber || !overtimeRate || !selectedRole) {
-      setEmployeeError('Please fill in all employee fields.');
+    if (!fullName || !hireDate || !contactNumber || !overtimeRate || !selectedRole || !employmentType) {
+      setEmployeeError('Please fill in all employee fields including employment type.');
+      return;
+    }
+
+    if (employmentType === 'full-time' && !minHoursPerDay) {
+      setEmployeeError('Please fill in minimum hours per day for full-time employees.');
+      return;
+    }
+
+    if (employmentType === 'part-time' && !maxHoursPerDay) {
+      setEmployeeError('Please fill in maximum hours per day for part-time employees.');
       return;
     }
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/employee`, {
+      // Step 1: Create employee record with employment type
+      const employeeResponse = await fetch(`${import.meta.env.VITE_BACKEND_URL}/employee`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -281,23 +307,59 @@ export default function BackOffice() {
           hire_date: hireDate,
           contact_number: contactNumber,
           overtime_rate: parseFloat(overtimeRate),
-          role_id: selectedRole
+          role_id: selectedRole,
+          type: employmentType
         })
       });
 
-      const result = await response.json();
-      if (response.ok && result.success) {
-        setFullName('');
-        setHireDate('');
-        setContactNumber('');
-        setOvertimeRate('');
-        setSelectedRole(roles.length > 0 ? roles[0].role_id : '');
-        setEmployeeError(null);
-        setIsModalOpen(false);
-        fetchEmployees();
-      } else {
-        setEmployeeError(result.message || 'Failed to add employee');
+      const employeeResult = await employeeResponse.json();
+      if (!employeeResponse.ok || !employeeResult.success) {
+        setEmployeeError(employeeResult.message || 'Failed to add employee');
+        return;
       }
+
+      // Step 2: Create employment type specific record
+      const employeeId = employeeResult.data.employee_id;
+      const employmentTypeEndpoint = employmentType === 'full-time' 
+        ? `${import.meta.env.VITE_BACKEND_URL}/employee/full-time`
+        : `${import.meta.env.VITE_BACKEND_URL}/employee/part-time`;
+
+      const employmentTypePayload = employmentType === 'full-time'
+        ? {
+            employee_id: employeeId,
+            min_hours_per_day: parseInt(minHoursPerDay)
+          }
+        : {
+            employee_id: employeeId,
+            max_hours_per_day: parseInt(maxHoursPerDay)
+          };
+
+      const employmentTypeResponse = await fetch(employmentTypeEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(employmentTypePayload)
+      });
+
+      const employmentTypeResult = await employmentTypeResponse.json();
+      if (!employmentTypeResponse.ok || !employmentTypeResult.success) {
+        setEmployeeError(employmentTypeResult.message || `Failed to set ${employmentType} employment type`);
+        return;
+      }
+
+      // Step 3: Clear form and close modal
+      setFullName('');
+      setHireDate('');
+      setContactNumber('');
+      setOvertimeRate('');
+      setSelectedRole(roles.length > 0 ? roles[0].role_id : '');
+      setEmploymentType('');
+      setMinHoursPerDay('');
+      setMaxHoursPerDay('');
+      setEmployeeError(null);
+      setIsModalOpen(false);
+      fetchEmployees();
     } catch (err) {
       console.error('Failed to create employee:', err);
       setEmployeeError('Could not connect to the server.');
@@ -1542,6 +1604,47 @@ export default function BackOffice() {
                       ))}
                     </select>
                   </div>
+
+                  <div className="field-group">
+                    <label>Employment Type</label>
+                    <select
+                      value={employmentType}
+                      onChange={(e) => setEmploymentType(e.target.value)}
+                      required
+                    >
+                      <option value="">Select employment type</option>
+                      <option value="full-time">Full-Time</option>
+                      <option value="part-time">Part-Time</option>
+                    </select>
+                  </div>
+
+                  {employmentType === 'full-time' && (
+                    <div className="field-group">
+                      <label>Minimum Hours Per Day</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={minHoursPerDay}
+                        onChange={(e) => setMinHoursPerDay(e.target.value)}
+                        placeholder="e.g., 8"
+                        required
+                      />
+                    </div>
+                  )}
+
+                  {employmentType === 'part-time' && (
+                    <div className="field-group">
+                      <label>Maximum Hours Per Day</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={maxHoursPerDay}
+                        onChange={(e) => setMaxHoursPerDay(e.target.value)}
+                        placeholder="e.g., 6"
+                        required
+                      />
+                    </div>
+                  )}
 
                   <div className="modal-actions">
                     <button type="button" className="cancel-btn" onClick={handleCloseModal}>

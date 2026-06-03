@@ -117,25 +117,79 @@ export const updateRole = async (req, res) => {
     }
 };
 export const createEmployee = async (req, res) => {
-    const { full_name, hire_date, contact_number, overtime_rate, role_id } = req.body;
+    const { full_name, hire_date, contact_number, overtime_rate, role_id, type } = req.body;
 
-    if (!full_name || !hire_date || !contact_number || overtime_rate === undefined || !role_id) {
+    if (!full_name || !hire_date || !contact_number || overtime_rate === undefined || !role_id || !type) {
         return res.status(400).json({
             success: false,
-            message: 'full_name, hire_date, contact_number, overtime_rate, and role_id are required'
+            message: 'full_name, hire_date, contact_number, overtime_rate, role_id, and type are required'
         });
     }
 
     try {
         const [result] = await db.query(
-            'INSERT INTO employee (full_name, hire_date, contact_number, overtime_rate, role_id) VALUES (?, ?, ?, ?, ?)',
-            [full_name, hire_date, contact_number, overtime_rate, role_id]
+            'INSERT INTO employee (full_name, hire_date, contact_number, overtime_rate, role_id, type) VALUES (?, ?, ?, ?, ?, ?)',
+            [full_name, hire_date, contact_number, overtime_rate, role_id, type]
         );
 
         res.status(201).json({
             success: true,
             message: 'Employee added successfully',
             data: { employee_id: result.insertId }
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Database error' });
+    }
+};
+
+export const createFullTimeEmployee = async (req, res) => {
+    const { employee_id, min_hours_per_day } = req.body;
+
+    if (!employee_id || !min_hours_per_day) {
+        return res.status(400).json({
+            success: false,
+            message: 'employee_id and min_hours_per_day are required'
+        });
+    }
+
+    try {
+        const [result] = await db.query(
+            'INSERT INTO full_time (employee_id, min_hours_per_day) VALUES (?, ?)',
+            [employee_id, min_hours_per_day]
+        );
+
+        res.status(201).json({
+            success: true,
+            message: 'Full-time employee record created successfully',
+            data: { full_time_id: result.insertId }
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Database error' });
+    }
+};
+
+export const createPartTimeEmployee = async (req, res) => {
+    const { employee_id, max_hours_per_day } = req.body;
+
+    if (!employee_id || !max_hours_per_day) {
+        return res.status(400).json({
+            success: false,
+            message: 'employee_id and max_hours_per_day are required'
+        });
+    }
+
+    try {
+        const [result] = await db.query(
+            'INSERT INTO part_time (employee_id, max_hours_per_day) VALUES (?, ?)',
+            [employee_id, max_hours_per_day]
+        );
+
+        res.status(201).json({
+            success: true,
+            message: 'Part-time employee record created successfully',
+            data: { part_time_id: result.insertId }
         });
     } catch (error) {
         console.error(error);

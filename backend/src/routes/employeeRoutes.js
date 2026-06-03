@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAttendance, getEmployeeById, getEmployees, punchAttendance, createEmployee, getRoles, createRole, getAttendanceReport, updateRole } from '../controller/employeeControllers.js';
+import { getAttendance, getEmployeeById, getEmployees, punchAttendance, createEmployee, createFullTimeEmployee, createPartTimeEmployee, getRoles, createRole, getAttendanceReport, updateRole } from '../controller/employeeControllers.js';
 
 const route = express.Router();
 
@@ -20,5 +20,9 @@ route.post('/', createEmployee);
 route.get('/', getEmployees);
 
 route.get('/:id', getEmployeeById);
+
+// Employment type routes
+route.post('/full-time', createFullTimeEmployee);
+route.post('/part-time', createPartTimeEmployee);
 
 export default route;

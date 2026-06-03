@@ -299,3 +299,52 @@
 }
 
 .edit-btn:hover { background-color: #64748b; }
+
+.view-btn {
+  padding: 6px 12px;
+  background-color: #7c3aed;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  margin-left: 15px;
+}
+
+.view-btn:hover {
+  background-color: #6d28d9;
+}
+
+.supplied-history-display {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  padding: 14px;
+  background-color: #111827;
+  border: 1px solid #334155;
+  border-radius: 8px;
+}
+
+.supplied-history-display h4 {
+  color: #cbd5e1;
+  font-size: 14px;
+  margin-top: 0;
+}
+
+.supplied-item {
+  margin-bottom: 10px;
+  padding: 10px;
+  background-color: #0f172a;
+  border: 1px solid #475569;
+  border-radius: 4px;
+}
+
+.supply-record {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.supply-label {
+  color: #cbd5e1;
+  font-size: 13px;
+}

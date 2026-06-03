@@ -51,7 +51,7 @@ export const getCustomers = async (req, res) => {
 export const createCustomer = async (req, res) => {
   const { full_name, contact_number, location_zone_id } = req.body;
 
-  if (!full_name || !location_zone_id) {
+  if (!full_name || location_zone_id === undefined || location_zone_id === null) {
     return res.status(400).json({
       success: false,
       error: 'full_name and location_zone_id are required'

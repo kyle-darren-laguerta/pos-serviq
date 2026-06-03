@@ -33,6 +33,7 @@ export default function Inventory() {
   const [supplySupplierId, setSupplySupplierId] = useState('');
   const [supplyDate, setSupplyDate] = useState(new Date().toISOString().split('T')[0]);
   const [supplyError, setSupplyError] = useState(null);
+  const [viewSuppliedIngredientId, setViewSuppliedIngredientId] = useState(null);
 
   // 1. Initialize the inventory state hook
   const [inventory, setInventory] = useState([]);
@@ -389,7 +390,7 @@ export default function Inventory() {
             </div>
 
             <div>
-              <label>Current Stock</label>
+              <label>Quantity</label>
               <input
                 type="number"
                 placeholder="e.g., 50"
@@ -506,30 +507,6 @@ export default function Inventory() {
               ))
             )}
           </div>
-
-          <div style={{ marginTop: '20px' }}>
-            <h4>Supplied Ingredients</h4>
-            {supplierIngredients.length === 0 ? (
-              <p>No supplier/ingredient data available.</p>
-            ) : (
-              supplierIngredients.map((item, index) => (
-                <div key={`${item.supplier_id}-${item.ingredient_id}-${index}`} className="stock-item">
-                  <div className="stock-details">
-                    <div className="stock-header">
-                      <span className="stock-name">{item.supplier_name}</span>
-                      <span className="stock-unit">{item.ingredient_name ? `- ${item.ingredient_name}` : ''}</span>
-                    </div>
-                    <div className="stock-info-grid">
-                      <span className="info-label">Ingredient ID: {item.ingredient_id}</span>
-                      <span className="info-label">Quantity: {item.quantity}</span>
-                      <span className="info-label">Price: ₱{item.supplied_price}</span>
-                      <span className="info-label">Supplied: {item.date_supplied}</span>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
         </div>
 
         <div className="current-stock-panel">
@@ -547,7 +524,7 @@ export default function Inventory() {
                     <div className="stock-info-grid">
                       <span className="info-label">Current: <span className={item.current_stock < item.minimum_stock_level ? 'low' : 'good'}>{item.current_stock}</span></span>
                       <span className="info-label">Min: {item.minimum_stock_level}</span>
-                      <span className="info-label">Cost: ₱{item.cost_per_unit}</span>
+                      <span className="info-label">Cost Per Unit: ₱{item.cost_per_unit}</span>
                     </div>
                   </div>
                   <div className="stock-actions">
@@ -559,6 +536,9 @@ export default function Inventory() {
                     </button>
                     <button className="supply-btn" type="button" onClick={() => openSupplyForm(item)}>
                       {supplyIngredientId === item.ingredient_id ? 'Cancel Supply' : 'Supply'}
+                    </button>
+                    <button className="view-btn" type="button" onClick={() => setViewSuppliedIngredientId(viewSuppliedIngredientId === item.ingredient_id ? null : item.ingredient_id)}>
+                      {viewSuppliedIngredientId === item.ingredient_id ? 'Hide History' : 'View History'}
                     </button>
                   </div>
                 </div>
@@ -685,6 +665,25 @@ export default function Inventory() {
                     </button>
                   </div>
                 </form>
+              )}
+              {viewSuppliedIngredientId === item.ingredient_id && (
+                <div className="supplied-history-display">
+                  <h4 style={{ marginBottom: '12px' }}>Supplied Ingredients History</h4>
+                  {supplierIngredients.filter(si => si.ingredient_id === item.ingredient_id).length === 0 ? (
+                    <p style={{ color: '#94a3b8' }}>No supply records for this ingredient.</p>
+                  ) : (
+                    supplierIngredients.filter(si => si.ingredient_id === item.ingredient_id).map((suppliedItem, idx) => (
+                      <div key={idx} className="supplied-item">
+                        <div className="supply-record">
+                          <span className="supply-label"><strong>Supplier:</strong> {suppliedItem.supplier_name}</span>
+                          <span className="supply-label"><strong>Quantity:</strong> {suppliedItem.quantity} {item.unit_of_measure}</span>
+                          <span className="supply-label"><strong>Price:</strong> ₱{suppliedItem.supplied_price}</span>
+                          <span className="supply-label"><strong>Supplied Date:</strong> {suppliedItem.date_supplied}</span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
               )}
               </React.Fragment>
             ))}
