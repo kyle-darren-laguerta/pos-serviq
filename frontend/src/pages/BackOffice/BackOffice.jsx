@@ -61,6 +61,15 @@ export default function BackOffice() {
   const [expensesData, setExpensesData] = useState([]);
   const [expensesError, setExpensesError] = useState(null);
   const [isExpensesLoading, setIsExpensesLoading] = useState(false);
+  const [ingredientExpensesStartDate, setIngredientExpensesStartDate] = useState(() => {
+    const start = new Date();
+    start.setDate(start.getDate() - 30);
+    return start.toISOString().slice(0, 10);
+  });
+  const [ingredientExpensesEndDate, setIngredientExpensesEndDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [ingredientExpensesData, setIngredientExpensesData] = useState([]);
+  const [ingredientExpensesError, setIngredientExpensesError] = useState(null);
+  const [isIngredientExpensesLoading, setIsIngredientExpensesLoading] = useState(false);
   const [attendanceStartDate, setAttendanceStartDate] = useState(() => {
     const start = new Date();
     start.setDate(start.getDate() - 30);
@@ -499,6 +508,37 @@ export default function BackOffice() {
   const handleExpensesFilterSubmit = (e) => {
     e.preventDefault();
     fetchExpensesReport();
+  };
+
+  const fetchIngredientExpensesReport = async () => {
+    setIsIngredientExpensesLoading(true);
+    setIngredientExpensesError(null);
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/finance/ingredient-expenses/${ingredientExpensesStartDate}/${ingredientExpensesEndDate}`
+      );
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        const payload = result.data;
+        setIngredientExpensesData(Array.isArray(payload) ? payload : [payload]);
+      } else {
+        setIngredientExpensesData([]);
+        setIngredientExpensesError(result.message || 'Unable to load ingredient expenses report.');
+      }
+    } catch (err) {
+      console.error('Ingredient expenses report fetch failed:', err);
+      setIngredientExpensesData([]);
+      setIngredientExpensesError('Could not connect to the server.');
+    } finally {
+      setIsIngredientExpensesLoading(false);
+    }
+  };
+
+  const handleIngredientExpensesFilterSubmit = (e) => {
+    e.preventDefault();
+    fetchIngredientExpensesReport();
   };
 
   const fetchAttendanceReport = async () => {
@@ -951,8 +991,8 @@ export default function BackOffice() {
               <div className="report-section">
                 <div className="report-section-header">
                   <div>
-                    <h2>Expenses Report</h2>
-                    <p>Review revenue by interval for completed financial performance.</p>
+                    <h2>Waste Item Expenses Report</h2>
+                    <p>Review expenses for waste items.</p>
                   </div>
                   <form className="report-filters" onSubmit={handleExpensesFilterSubmit}>
                     <div className="filter-group">
@@ -1037,8 +1077,94 @@ export default function BackOffice() {
               <div className="report-section">
                 <div className="report-section-header">
                   <div>
-                    <h2>Full Time Employee Attendance Records</h2>
-                    <p>Review staff attendance and hours worked by date range.</p>
+                    <h2>Ingredient Expenses Report</h2>
+                    <p>Review ingredient cost totals for the selected interval.</p>
+                  </div>
+                  <form className="report-filters" onSubmit={handleIngredientExpensesFilterSubmit}>
+                    <div className="filter-group">
+                      <label>Start Date</label>
+                      <input
+                        type="date"
+                        value={ingredientExpensesStartDate}
+                        onChange={(e) => setIngredientExpensesStartDate(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="filter-group">
+                      <label>End Date</label>
+                      <input
+                        type="date"
+                        value={ingredientExpensesEndDate}
+                        onChange={(e) => setIngredientExpensesEndDate(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <button type="submit" className="filter-btn">
+                      Update
+                    </button>
+                  </form>
+                </div>
+
+                {ingredientExpensesError && <div className="error-message">{ingredientExpensesError}</div>}
+
+                <div className="revenue-summary-grid">
+                  <div className="report-card">
+                    <span>Total Rows</span>
+                    <strong>{ingredientExpensesData.length}</strong>
+                  </div>
+                  <div className="report-card">
+                    <span>Interval</span>
+                    <strong>{ingredientExpensesStartDate} → {ingredientExpensesEndDate}</strong>
+                  </div>
+                  <div className="report-card">
+                    <span>Status</span>
+                    <strong>{isIngredientExpensesLoading ? 'Loading...' : 'Ready'}</strong>
+                  </div>
+                </div>
+
+                <div className="report-table-wrapper">
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        {ingredientExpensesData.length > 0 ? (
+                          Object.keys(ingredientExpensesData[0]).map((field) => (
+                            <th key={field}>{field.replace(/_/g, ' ')}</th>
+                          ))
+                        ) : (
+                          <th>No data available</th>
+                        )}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {isIngredientExpensesLoading ? (
+                        <tr>
+                          <td colSpan={ingredientExpensesData[0] ? Object.keys(ingredientExpensesData[0]).length : 1}>
+                            Loading ingredient expenses...
+                          </td>
+                        </tr>
+                      ) : ingredientExpensesData.length > 0 ? (
+                        ingredientExpensesData.map((row, index) => (
+                          <tr key={index}>
+                            {Object.values(row).map((value, index2) => (
+                              <td key={index2}>{value ?? '-'}</td>
+                            ))}
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={1}>No ingredient expense data found for the selected interval.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="report-section">
+                <div className="report-section-header">
+                  <div>
+                    <h2>Full Time Employee Attendance Report</h2>
+                    <p>Review full-time employee attendance records for the selected interval.</p>
                   </div>
                   <form className="report-filters" onSubmit={handleAttendanceFilterSubmit}>
                     <div className="filter-group">
@@ -1123,8 +1249,8 @@ export default function BackOffice() {
               <div className="report-section">
                 <div className="report-section-header">
                   <div>
-                    <h2>Part Time Employee Salary Report</h2>
-                    <p>Review part-time employee expected salary based on hours worked.</p>
+                    <h2>Part Time Employee Attendance Report</h2>
+                    <p>Review part-time employee attendance records for the selected interval.</p>
                   </div>
                   <form className="report-filters" onSubmit={handlePartTimeSalaryFilterSubmit}>
                     <div className="filter-group">
